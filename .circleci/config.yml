@@ -101,8 +101,9 @@ jobs:
       - run:
           name: Snyk Security Testing
           command: |
-            mkdir -p security-results            cd client ; snyk test --json > ../security-results/client-snyk.json || true
-            cd server ; snyk test --json > ../security-results/server-snyk.json || true
+            mkdir -p security-results
+            cd client && snyk test --json > ../security-results/client-snyk.json || true
+            cd server && snyk test --json > ../security-results/server-snyk.json || true
       
       # Retire.js for JavaScript vulnerabilities
       - run:
@@ -360,12 +361,11 @@ jobs:
         # Run SonarCloud analysis with focus on hotspots and code smells
       - run:
           name: Run SonarCloud Analysis
-          command: |
-            echo "Starting SonarCloud analysis with focus on hotspots and code smells..."
+          command: |            echo "Starting SonarCloud analysis with focus on hotspots and code smells..."
             echo "Project Key: eli-iie_APDS7311-CustomerPortal"
             echo "Organization: eli-iie"
-            echo "Token present: ${SONAR_TOKEN:+Yes}" "${SONAR_TOKEN:+No}"
-              npx sonarqube-scanner \
+            echo "Token present: ${SONAR_TOKEN:+Yes}"
+            npx sonarqube-scanner \
               -Dsonar.projectKey=eli-iie_APDS7311-CustomerPortal \
               -Dsonar.organization=eli-iie \
               -Dsonar.host.url=https://sonarcloud.io \
@@ -463,10 +463,10 @@ workflows:
       - setup-and-lint
       - security-testing:
           requires:
-            - setup-and-lint
-      - sast-analysis:
+            - setup-and-lint      - sast-analysis:
           requires:
-            - setup-and-lint      - sca-analysis:
+            - setup-and-lint
+      - sca-analysis:
           requires:
             - setup-and-lint
       - api-security-testing:
