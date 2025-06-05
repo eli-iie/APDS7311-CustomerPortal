@@ -30,7 +30,7 @@ This application provides a secure platform for customers to submit internationa
 - Audit trail system
 - Input validation and sanitization
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js (v14 or higher)
@@ -95,7 +95,7 @@ npm start
 ```
 Client will run on: `http://localhost:3000`
 
-## 🧪 Testing
+## Testing
 
 ### Run Comprehensive Tests
 ```bash
@@ -122,7 +122,7 @@ node tests/simple_employee_test.js
    - Verify/reject payments
    - Submit verified payments to SWIFT
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 CustomerPortal/
@@ -134,7 +134,7 @@ CustomerPortal/
 └── package.json           # Root package configuration
 ```
 
-## 🔐 Default Employee Accounts
+## Default Employee Accounts
 
 The system comes with pre-configured employee accounts:
 
@@ -145,7 +145,7 @@ The system comes with pre-configured employee accounts:
 | sarah.jones | EmpPass123! | Employee | Compliance |
 | manager.swift | ManagerPass123! | Manager | SWIFT Operations |
 
-## 🛡️ Security Implementation
+## Security Implementation
 
 This application implements comprehensive security measures:
 
@@ -157,7 +157,7 @@ This application implements comprehensive security measures:
 - **SSL/HTTPS:** Complete certificate implementation
 - **Audit Logging:** Comprehensive security trail
 
-## 📚 API Documentation
+## API Documentation
 
 ### Authentication Endpoints
 - `POST /api/auth/register` - Customer registration
@@ -172,19 +172,19 @@ This application implements comprehensive security measures:
 - `PUT /api/employee/payments/:id/reject` - Reject payment
 - `POST /api/employee/payments/submit-to-swift` - Submit to SWIFT
 
-## 🏆 Test Results
+## Test Results
 
 The application achieves **100% success rate** on comprehensive testing:
 
-- ✅ Application Availability
-- ✅ Customer Registration & Login
-- ✅ Payment Submission
-- ✅ Employee Authentication
-- ✅ Payment Verification
-- ✅ SWIFT Submission
-- ✅ Audit Trail Verification
+- Application Availability
+- Customer Registration & Login
+- Payment Submission
+- Employee Authentication
+- Payment Verification
+- SWIFT Submission
+- Audit Trail Verification
 
-## 📖 Additional Documentation
+## Additional Documentation
 
 Detailed documentation is available in the `docs/` folder:
 - Security Architecture Documentation
@@ -192,15 +192,15 @@ Detailed documentation is available in the `docs/` folder:
 - Testing Procedures
 - Compliance Assessment
 
-## 🤝 Contributing
+## Contributing
 
 This project was developed as part of APDS7311 coursework. For academic integrity, please refer to the course guidelines for collaboration policies.
 
-## 📄 License
+## License
 
 This project is developed for educational purposes as part of APDS7311 - Application Development Security coursework.
 
-## 🆘 Support
+## Support
 
 For technical issues or questions:
 1. Check the documentation in the `docs/` folder
@@ -210,4 +210,4 @@ For technical issues or questions:
 
 ---
 
-**🏆 Assignment Status: COMPLETE - Ready for Submission (96.9% Estimated Score)**
+**Assignment Status: COMPLETE - Ready for Submission**

@@ -54,11 +54,11 @@ git push -u origin main
 ## CI/CD Pipeline Features
 
 Your pipeline includes:
-- ✅ Node.js dependency installation
-- ✅ Security vulnerability scanning
-- ✅ Code quality analysis with SonarQube
-- ✅ Automated testing execution
-- ✅ Build verification
+- Node.js dependency installation
+- Security vulnerability scanning
+- Code quality analysis with SonarQube
+- Automated testing execution
+- Build verification
 
 ## Repository Structure
 
