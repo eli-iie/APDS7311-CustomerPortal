@@ -367,15 +367,11 @@ jobs:
             echo "Project Key: eli-iie_APDS7311-CustomerPortal"
             echo "Organization: eli-iie"
             echo "Token present: ${SONAR_TOKEN:+Yes}" "${SONAR_TOKEN:+No}"
-            
-            npx sonarqube-scanner \
+              npx sonarqube-scanner \
               -Dsonar.projectKey=eli-iie_APDS7311-CustomerPortal \
               -Dsonar.organization=eli-iie \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN \
-              -Dsonar.sources=client/src,server \
-              -Dsonar.exclusions="**/node_modules/**,**/build/**" \
-              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+              -Dsonar.token=$SONAR_TOKEN
 
   # Job 7: Build and Test
   build-and-test:
