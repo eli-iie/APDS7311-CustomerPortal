@@ -101,9 +101,8 @@ jobs:
       - run:
           name: Snyk Security Testing
           command: |
-            mkdir -p security-results
-            cd client && snyk test --json > ../security-results/client-snyk.json || true
-            cd server && snyk test --json > ../security-results/server-snyk.json || true
+            mkdir -p security-results            cd client ; snyk test --json > ../security-results/client-snyk.json || true
+            cd server ; snyk test --json > ../security-results/server-snyk.json || true
       
       # Retire.js for JavaScript vulnerabilities
       - run:
@@ -467,13 +466,13 @@ workflows:
             - setup-and-lint
       - sast-analysis:
           requires:
-            - setup-and-lint
-      - sca-analysis:
+            - setup-and-lint      - sca-analysis:
           requires:
             - setup-and-lint
       - api-security-testing:
           requires:
-            - setup-and-lint      - sonarcloud-analysis:
+            - setup-and-lint
+      - sonarcloud-analysis:
           requires:
             - setup-and-lint
       - build-and-test:
