@@ -328,7 +328,6 @@ jobs:
       # Store API security results
       - store_artifacts:
           path: api-security-results
-
   # Job 6: SonarCloud Analysis
   sonarcloud-analysis:
     docker:
@@ -337,6 +336,21 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/repo
+      
+      # Verify project structure for SonarCloud
+      - run:
+          name: Verify Project Structure
+          command: |
+            echo "Current directory structure:"
+            ls -la
+            echo "Client source files:"
+            ls -la client/src/ || echo "Client src not found"
+            echo "Server files:"
+            ls -la server/ || echo "Server not found"
+            echo "SonarCloud configuration:"
+            cat sonar-project.properties
+      
+      # Run SonarCloud analysis
       - sonarcloud/scan
 
   # Job 7: Build and Test
