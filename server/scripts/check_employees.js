@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const Employee = require('./models/Employee');
+const Employee = require('../models/Employee');
 
 const connectDB = async () => {
   try {

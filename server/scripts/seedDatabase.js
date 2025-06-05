@@ -3,9 +3,9 @@ const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 // Import models
-const Employee = require('./models/Employee');
-const User = require('./models/User');
-const AuditTrail = require('./models/AuditTrail');
+const Employee = require('../models/Employee');
+const User = require('../models/User');
+const AuditTrail = require('../models/AuditTrail');
 
 const connectDB = async () => {
   try {
@@ -57,10 +57,13 @@ const seedEmployees = async () => {
         department: 'International Payments',
         role: 'manager'
       }
-    ];
-
-    // Insert employees
-    const createdEmployees = await Employee.insertMany(employees);
+    ];    // Create employees individually to trigger password hashing middleware
+    const createdEmployees = [];
+    for (const empData of employees) {
+      const employee = new Employee(empData);
+      await employee.save(); // This triggers the pre-save middleware for password hashing
+      createdEmployees.push(employee);
+    }
     console.log(`✅ Created ${createdEmployees.length} pre-registered employees`);
 
     // Log audit trail for employee creation

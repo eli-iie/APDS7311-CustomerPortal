@@ -1,10 +1,10 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Employee = require('./models/Employee');
+const Employee = require('../models/Employee');
 
 async function testPassword() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
     
     const employee = await Employee.findOne({ username: 'admin.user' });
@@ -15,9 +15,8 @@ async function testPassword() {
     
     console.log('Employee found:', employee.username);
     console.log('Password hash:', employee.password.substring(0, 20) + '...');
-    
-    // Test password comparison
-    const passwords = ['AdminPass2024!', 'admin123', 'password123'];
+      // Test password comparison
+    const passwords = ['AdminPass123!', 'SecurePass123!', 'ManagerPass123!'];
     
     for (const pwd of passwords) {
       try {
