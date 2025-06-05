@@ -325,8 +325,7 @@ jobs:
               -H "Content-Type: application/json" >> api-security-results/auth-bypass-test.txt
         # Store API security results
       - store_artifacts:
-          path: api-security-results
-  # Job 6: SonarCloud Analysis
+          path: api-security-results  # Job 6: SonarCloud Analysis
   sonarcloud-analysis:
     docker:
       - image: cimg/openjdk:11.0-node
@@ -335,42 +334,48 @@ jobs:
       - attach_workspace:
           at: ~/repo
       
-      # Install SonarCloud scanner
+      # Install SonarCloud scanner using npm (simpler approach)
       - run:
           name: Install SonarCloud Scanner
           command: |
-            # Download and install SonarCloud Scanner CLI
-            wget -O sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-            unzip sonar-scanner.zip
-            sudo mv sonar-scanner-4.8.0.2856-linux /opt/sonar-scanner
-            sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
+            npm install -g sonarqube-scanner
       
-      # Verify project structure for SonarCloud
+      # Verify environment
       - run:
-          name: Verify Project Structure
+          name: Verify Environment
           command: |
-            echo "Current directory structure:"
+            echo "Current directory:"
+            pwd
             ls -la
-            echo "Client source files:"
-            ls -la client/src/ || echo "Client src not found"
-            echo "Server files:"
-            ls -la server/ || echo "Server not found"
-            echo "SonarCloud configuration:"
-            cat sonar-project.properties
+            echo "Node version:"
+            node --version
+            echo "NPM version:"
+            npm --version
             echo "Java version:"
             java -version
-            echo "SonarCloud scanner version:"
-            sonar-scanner --version
+            echo "Checking source files:"
+            ls -la client/src/ || echo "Client src not found"
+            ls -la server/ || echo "Server not found"
+            echo "SonarCloud configuration:"
+            cat sonar-project.properties || echo "sonar-project.properties not found"
       
-      # Run SonarCloud analysis manually
+      # Run SonarCloud analysis
       - run:
           name: Run SonarCloud Analysis
           command: |
-            sonar-scanner \
+            echo "Starting SonarCloud analysis..."
+            echo "Project Key: eli-iie_APDS7311-CustomerPortal"
+            echo "Organization: eli-iie"
+            echo "Token present: ${SONAR_TOKEN:+Yes}" "${SONAR_TOKEN:+No}"
+            
+            npx sonarqube-scanner \
               -Dsonar.projectKey=eli-iie_APDS7311-CustomerPortal \
               -Dsonar.organization=eli-iie \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN
+              -Dsonar.login=$SONAR_TOKEN \
+              -Dsonar.sources=client/src,server \
+              -Dsonar.exclusions="**/node_modules/**,**/build/**" \
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
 
   # Job 7: Build and Test
   build-and-test:
@@ -470,11 +475,9 @@ workflows:
             - setup-and-lint
       - api-security-testing:
           requires:
-            - setup-and-lint
-      - sonarcloud-analysis:
+            - setup-and-lint      - sonarcloud-analysis:
           requires:
             - setup-and-lint
-          context: SonarCloud
       - build-and-test:
           requires:
             - security-testing
