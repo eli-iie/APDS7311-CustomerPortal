@@ -33,6 +33,10 @@ const PORT = process.env.PORT || 5001;
 // Apply comprehensive security configuration
 app.use(securityHeaders);
 app.use(corsMiddleware);
+
+// Handle preflight requests explicitly
+app.options('*', corsMiddleware);
+
 app.use(requestLogger);
 app.use(sanitizeInput);
 app.use(globalLimiter);
