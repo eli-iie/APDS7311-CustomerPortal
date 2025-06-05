@@ -1,0 +1,5 @@
+{
+    "sonarCloudOrganization": "eli-iie",
+    "projectKey": "eli-iie_APDS7311-CustomerPortal",
+    "region": "EU"
+}
