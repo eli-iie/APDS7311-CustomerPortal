@@ -37,6 +37,9 @@ This application provides a secure platform for customers to submit internationa
 - MongoDB (v4.4 or higher)
 - npm or yarn package manager
 
+### DevSecOps Pipeline
+This project includes a comprehensive CI/CD pipeline with CircleCI and SonarCloud integration for automated security testing and code quality analysis.
+
 ### Installation
 
 1. **Clone the repository**
