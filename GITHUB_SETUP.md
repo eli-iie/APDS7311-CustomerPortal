@@ -1,77 +1,73 @@
+<!-- filepath: c:\Users\eliiz\Desktop\Learning\CustomerPortal\GITHUB_SETUP.md -->
 # GitHub Repository Setup Guide
 
-## Step 1: Create GitHub Repository
+This guide will walk you through setting up your GitHub repository with automated SonarCloud analysis.
 
-1. Go to https://github.com and log in to your account
-2. Click "New" to create a new repository
-3. Repository name: `secure-customer-payments-portal`
-4. Description: `APDS7311 Assignment - Secure Customer International Payments Portal`
-5. Set as **Public** (for assignment submission)
-6. **DO NOT** initialize with README, .gitignore, or license (we already have these)
-7. Click "Create repository"
+## 1. Create a GitHub Repository
 
-## Step 2: Push Local Repository to GitHub
+1. Go to [GitHub](https://github.com) and sign in to your account
+2. Click the "+" icon in the upper right corner and select "New repository"
+3. Name your repository `APDS7311-CustomerPortal`
+4. Add a description: "Secure Customer International Payments Portal for APDS7311 Assignment"
+5. Choose "Private" repository (or Public if required by your assignment)
+6. Click "Create repository"
 
-Run these commands in your terminal:
+## 2. Push Your Code to GitHub
 
-```bash
-# Add the GitHub remote (replace YOUR_USERNAME with your GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/secure-customer-payments-portal.git
+Run these commands in your terminal from the project root directory:
 
-# Push to GitHub
-git branch -M main
+```powershell
+# Initialize git repository (if not already initialized)
+git init
+
+# Add all files
+git add .
+
+# Commit the changes
+git commit -m "Initial commit for final submission"
+
+# Add the remote repository (replace YOUR_USERNAME with your GitHub username)
+git remote add origin https://github.com/YOUR_USERNAME/APDS7311-CustomerPortal.git
+
+# Push the code to GitHub
 git push -u origin main
 ```
 
-## Step 3: Set up Circle CI
+## 3. Set Up SonarCloud
 
-1. Go to https://circleci.com and sign in with your GitHub account
-2. Click "Projects" in the sidebar
-3. Find your `secure-customer-payments-portal` repository
-4. Click "Set Up Project"
-5. Choose "Use existing config" (we already have `.circleci/config.yml`)
-6. Click "Start Building"
-
-## Step 4: Configure SonarCloud
-
-1. Go to https://sonarcloud.io and sign in with your GitHub account
+1. Go to [SonarCloud](https://sonarcloud.io/) and sign in with your GitHub account
 2. Click "+" and select "Analyze new project"
-3. Choose your `secure-customer-payments-portal` repository
-4. Select "Previous version" for analysis method
-5. Copy the project key and token
-6. In Circle CI, go to your project settings
-7. Add environment variables:
-   - `SONAR_TOKEN`: [paste your SonarCloud token]
-   - `SONAR_PROJECT_KEY`: [paste your project key]
+3. Find and select your repository
+4. Choose the free plan option
+5. Select "GitHub Actions" as your analysis method
+6. Follow SonarCloud's setup instructions to:
+   - Generate a SONAR_TOKEN
+   - Add it to your GitHub repository secrets
 
-## Step 5: Verify Pipeline
+## 4. Add SONAR_TOKEN to GitHub Secrets
 
-1. Make a small change to trigger the pipeline
-2. Check Circle CI dashboard for build status
-3. Check SonarCloud for code quality analysis
-4. Verify both pass successfully
+1. Go to your GitHub repository
+2. Click "Settings" > "Secrets and variables" > "Actions"
+3. Click "New repository secret"
+4. Name: `SONAR_TOKEN`
+5. Value: Paste the token from SonarCloud
+6. Click "Add secret"
 
-## CI/CD Pipeline Features
+## 5. Verify Setup
 
-Your pipeline includes:
-- Node.js dependency installation
-- Security vulnerability scanning
-- Code quality analysis with SonarQube
-- Automated testing execution
-- Build verification
+1. Go to the "Actions" tab in your GitHub repository
+2. You should see the "SonarCloud Analysis" workflow
+3. This workflow will run automatically when you push code
+4. You can also manually trigger it by clicking "Run workflow"
 
-## Repository Structure
+## 6. Access SonarCloud Results
 
-```
-secure-customer-payments-portal/
-├── .circleci/config.yml        # Circle CI pipeline configuration
-├── sonar-project.properties    # SonarQube project settings
-├── README.md                   # Project documentation
-├── PROJECT_SUMMARY.md          # Assignment summary
-├── client/                     # React frontend
-├── server/                     # Node.js backend
-├── docs/                       # Technical documentation
-└── tests/                      # Test suites
-```
+1. After the workflow runs successfully, go to [SonarCloud](https://sonarcloud.io/)
+2. Find your project in the dashboard
+3. Review the analysis results, including:
+   - Code quality metrics
+   - Security vulnerabilities
+   - Code smells
+   - Test coverage
 
-This setup provides a complete CI/CD pipeline with automated code quality checks as required by the assignment.
+The GitHub Actions workflow has been added to your project at `.github/workflows/sonarcloud.yml`

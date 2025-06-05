@@ -63,13 +63,21 @@ app.use(session({
 
 // Apply specialized rate limiters to specific routes
 app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
 app.use('/api/employee/login', employeeLimiter);
 app.use('/api/payment', paymentLimiter);
 
 // Brute force protection for sensitive routes
 app.use('/api/auth/login', bruteForceProtection);
 app.use('/api/employee/login', bruteForceProtection);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    message: 'APDS7311 Customer Payment Portal - Server is running'
+  });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);

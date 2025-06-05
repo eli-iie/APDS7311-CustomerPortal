@@ -358,12 +358,11 @@ jobs:
             ls -la server/ || echo "Server not found"
             echo "SonarCloud configuration:"
             cat sonar-project.properties || echo "sonar-project.properties not found"
-      
-      # Run SonarCloud analysis
+        # Run SonarCloud analysis with focus on hotspots and code smells
       - run:
           name: Run SonarCloud Analysis
           command: |
-            echo "Starting SonarCloud analysis..."
+            echo "Starting SonarCloud analysis with focus on hotspots and code smells..."
             echo "Project Key: eli-iie_APDS7311-CustomerPortal"
             echo "Organization: eli-iie"
             echo "Token present: ${SONAR_TOKEN:+Yes}" "${SONAR_TOKEN:+No}"
@@ -371,7 +370,10 @@ jobs:
               -Dsonar.projectKey=eli-iie_APDS7311-CustomerPortal \
               -Dsonar.organization=eli-iie \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token=$SONAR_TOKEN
+              -Dsonar.token=$SONAR_TOKEN \
+              -Dsonar.security.hotspots.enable=true \
+              -Dsonar.security.enableCodeSmells=true \
+              -Dsonar.verbose=true
 
   # Job 7: Build and Test
   build-and-test:

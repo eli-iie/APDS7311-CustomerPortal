@@ -5,6 +5,7 @@ require('dotenv').config();
 // Import models
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const Payment = require('../models/Payment');
 const AuditTrail = require('../models/AuditTrail');
 
 const connectDB = async () => {
@@ -93,8 +94,8 @@ const seedEmployees = async () => {
 const seedTestCustomers = async () => {
   try {
     // Clear existing test customers
-    await User.deleteMany({ username: { $in: ['test.customer', 'demo.user'] } });
-    console.log('Cleared existing test customers');    // Create test customers for demonstration
+    await User.deleteMany({ username: { $in: ['test_customer', 'demo_user'] } });
+    console.log('Cleared existing test customers');// Create test customers for demonstration
     const customers = [
       {
         fullName: 'Test Customer',
@@ -112,9 +113,13 @@ const seedTestCustomers = async () => {
         password: 'DemoPass123!',
         role: 'customer'
       }
-    ];
-
-    const createdCustomers = await User.insertMany(customers);
+    ];    // Create customers individually to trigger password hashing middleware
+    const createdCustomers = [];
+    for (const custData of customers) {
+      const customer = new User(custData);
+      await customer.save(); // This triggers the pre-save middleware for password hashing
+      createdCustomers.push(customer);
+    }
     console.log(`✅ Created ${createdCustomers.length} test customers`);
 
     // Log audit trail for customer creation
@@ -141,7 +146,99 @@ const seedTestCustomers = async () => {
   }
 };
 
-const printSeedingResults = (employees, customers) => {
+const seedSamplePayments = async (customers) => {
+  try {
+    // Clear existing payments
+    await Payment.deleteMany({});
+    console.log('Cleared existing payments');
+
+    // Create sample payments with different statuses for testing
+    const samplePayments = [
+      {
+        customerId: customers[0]._id, // demo_user
+        amount: 1500.00,
+        currency: 'USD',
+        provider: 'SWIFT',
+        payeeAccountNumber: 'GB29NWBK60161331926819',
+        swiftCode: 'NWBKGB2L',
+        payeeName: 'John Smith',
+        status: 'pending'
+      },
+      {
+        customerId: customers[0]._id, // demo_user
+        amount: 2500.50,
+        currency: 'EUR',
+        provider: 'SWIFT',
+        payeeAccountNumber: 'DE89370400440532013000',
+        swiftCode: 'DEUTDEFF',
+        payeeName: 'Maria Garcia',
+        status: 'pending'
+      },
+      {
+        customerId: customers[1]._id, // test_customer
+        amount: 750.25,
+        currency: 'GBP',
+        provider: 'SWIFT',
+        payeeAccountNumber: 'FR1420041010050500013M02606',
+        swiftCode: 'BNPAFRPP',
+        payeeName: 'Pierre Dubois',
+        status: 'verified',
+        verifiedAt: new Date()
+      },
+      {
+        customerId: customers[1]._id, // test_customer
+        amount: 3200.00,
+        currency: 'USD',
+        provider: 'SWIFT',
+        payeeAccountNumber: 'US64SVBKUS6S3300958879',
+        swiftCode: 'SVBKUS6S',
+        payeeName: 'Robert Johnson',
+        status: 'submitted',
+        submittedAt: new Date()
+      },
+      {
+        customerId: customers[0]._id, // demo_user
+        amount: 500.00,
+        currency: 'ZAR',
+        provider: 'SWIFT',
+        payeeAccountNumber: 'ZA220004058138003124567',
+        swiftCode: 'SBZAZAJJ',
+        payeeName: 'Sarah Williams',
+        status: 'completed'
+      }
+    ];    // Create payments individually
+    const createdPayments = [];
+    for (const paymentData of samplePayments) {
+      const payment = new Payment(paymentData);
+      await payment.save();
+      createdPayments.push(payment);
+    }
+
+    console.log(`✅ Created ${createdPayments.length} sample payments`);    // Log audit trail for payment creation
+    for (const payment of createdPayments) {
+      await AuditTrail.log({
+        userId: payment.customerId,
+        userModel: 'User',
+        action: 'PAYMENT_CREATED',
+        entityType: 'Payment',
+        entityId: payment._id,
+        description: `Sample payment created: ${payment.amount} ${payment.currency} to ${payment.payeeName}`,
+        ipAddress: '127.0.0.1',
+        userAgent: 'System Seeder',
+        severity: 'LOW'
+      });
+    }
+
+    console.log('✅ Payment audit trails created');
+    return createdPayments;
+
+  } catch (error) {
+    console.error('❌ Error seeding payments:', error);
+    throw error;
+  }
+};
+
+const printSeedingResults = (employees, customers, payments) => {
   console.log('\n📋 SEEDING RESULTS');
   console.log('==================');
   
@@ -162,6 +259,19 @@ const printSeedingResults = (employees, customers) => {
     console.log('    Password: TestPass123! / DemoPass123!');
     console.log('');
   });
+
+  console.log('\n💰 SAMPLE PAYMENTS:');
+  if (payments && payments.length > 0) {
+    payments.forEach(payment => {
+      console.log(`  • ${payment.amount} ${payment.currency} to ${payment.payeeName}`);
+      console.log(`    Status: ${payment.status}`);
+      console.log(`    SWIFT Code: ${payment.swiftCode}`);
+      console.log(`    Account: ${payment.payeeAccountNumber}`);
+      console.log('');
+    });
+  } else {
+    console.log('  No payments seeded');
+  }
 
   console.log('\n🔐 SECURITY FEATURES IMPLEMENTED:');
   console.log('  ✅ Password hashing with bcrypt (salt rounds: 12)');
@@ -186,8 +296,9 @@ const seedDatabase = async () => {
     
     const employees = await seedEmployees();
     const customers = await seedTestCustomers();
+    const payments = await seedSamplePayments(customers);
     
-    printSeedingResults(employees, customers);
+    printSeedingResults(employees, customers, payments);
     
     console.log('\n✅ Database seeding completed successfully!');
     console.log('🚀 Ready to start the Employee Portal implementation');
@@ -206,4 +317,4 @@ if (require.main === module) {
   seedDatabase();
 }
 
-module.exports = { seedDatabase, seedEmployees, seedTestCustomers };
+module.exports = { seedDatabase, seedEmployees, seedTestCustomers, seedSamplePayments };

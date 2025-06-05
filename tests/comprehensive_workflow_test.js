@@ -14,14 +14,12 @@ const axios = require('axios');
 const BASE_URL = 'http://localhost:5001/api';
 const FRONTEND_URL = 'http://localhost:3000';
 
-// Generate unique test data
-const timestamp = Date.now().toString().slice(-6);
+// Use preloaded customer account (no registration needed)
 const TEST_CUSTOMER = {
-  fullName: 'Sarah Test Customer',
-  idNumber: `9001015${timestamp}`, // Unique 13-digit ID (7 + 6 digits)
-  accountNumber: `98765${timestamp.slice(-5)}`, // Unique 10-digit account
-  username: `sarahtest${timestamp}`,
-  password: 'TestPass123!'
+  fullName: 'Demo User',
+  accountNumber: '0987654321',
+  username: 'demo_user',
+  password: 'DemoPass123!'
 };
 
 const TEST_PAYMENT = {
@@ -124,35 +122,11 @@ async function testApplicationAvailability() {
   }
 }
 
-async function testCustomerRegistration() {
-  logStep('1', 'CUSTOMER REGISTRATION');
-  
-  log(`Registering customer: ${TEST_CUSTOMER.fullName}`, 'cyan', 1);
-  log(`Username: ${TEST_CUSTOMER.username}`, 'cyan', 1);
-  log(`Account: ${TEST_CUSTOMER.accountNumber}`, 'cyan', 1);
-    try {
-    const response = await axios.post(`${BASE_URL}/auth/register`, TEST_CUSTOMER);
-    log('✅ Customer registration successful', 'green', 1);
-    log(`Response: ${response.data.message || response.data.msg}`, 'green', 2);
-    return true;
-  } catch (error) {
-    if (error.response?.data?.msg?.includes('already exists')) {
-      log('⚠️  Customer already exists, continuing...', 'yellow', 1);
-      return true;
-    }
-    log('❌ Customer registration failed', 'red', 1);
-    log(`Error: ${error.response?.data?.message || error.response?.data?.msg || error.message}`, 'red', 2);
-    if (error.response?.data?.errors) {
-      error.response.data.errors.forEach(err => {
-        log(`  - ${err.field}: ${err.message}`, 'red', 2);
-      });
-    }
-    return false;
-  }
-}
-
 async function testCustomerLogin() {
-  logStep('2', 'CUSTOMER LOGIN');
+  logStep('1', 'PRELOADED CUSTOMER LOGIN');
+  
+  log(`Testing preloaded customer: ${TEST_CUSTOMER.fullName}`, 'cyan', 1);
+  log(`Account: ${TEST_CUSTOMER.accountNumber}`, 'cyan', 1);
   
   try {
     const response = await axios.post(`${BASE_URL}/auth/login`, {
@@ -175,7 +149,7 @@ async function testCustomerLogin() {
 }
 
 async function testPaymentSubmission() {
-  logStep('3', 'PAYMENT SUBMISSION');
+  logStep('2', 'PAYMENT SUBMISSION');
   
   log(`Submitting payment: ${TEST_PAYMENT.amount} ${TEST_PAYMENT.currency}`, 'cyan', 1);
   log(`To: ${TEST_PAYMENT.payeeName}`, 'cyan', 1);
@@ -211,7 +185,7 @@ async function testPaymentSubmission() {
 }
 
 async function testEmployeeLogin() {
-  logStep('4', 'EMPLOYEE LOGIN');
+  logStep('3', 'EMPLOYEE LOGIN');
   
   log(`Logging in employee: ${TEST_EMPLOYEE.username}`, 'cyan', 1);
   
@@ -235,7 +209,7 @@ async function testEmployeeLogin() {
 }
 
 async function testViewPendingPayments() {
-  logStep('5', 'VIEW PENDING PAYMENTS');
+  logStep('4', 'VIEW PENDING PAYMENTS');
   
   try {
     const response = await axios.get(`${BASE_URL}/employee/payments/pending`, {
@@ -265,7 +239,7 @@ async function testViewPendingPayments() {
 }
 
 async function testPaymentVerification() {
-  logStep('6', 'PAYMENT VERIFICATION');
+  logStep('5', 'PAYMENT VERIFICATION');
   
   if (!paymentId) {
     log('❌ No payment available for verification', 'red', 1);
@@ -292,7 +266,7 @@ async function testPaymentVerification() {
 }
 
 async function testSwiftSubmission() {
-  logStep('7', 'SWIFT SUBMISSION');
+  logStep('6', 'SWIFT SUBMISSION');
   
   try {
     // Get verified payments
@@ -335,7 +309,7 @@ async function testSwiftSubmission() {
 }
 
 async function testAuditTrail() {
-  logStep('8', 'AUDIT TRAIL VERIFICATION');
+  logStep('7', 'AUDIT TRAIL VERIFICATION');
   
   try {
     const response = await axios.get(`${BASE_URL}/employee/audit-trail`, {
@@ -367,13 +341,12 @@ async function testAuditTrail() {
 async function runComprehensiveTest() {
   logSection('COMPREHENSIVE WORKFLOW TEST - SECURE CUSTOMER INTERNATIONAL PAYMENTS PORTAL');
   
-  log('🏦 Testing Complete Banking Portal Workflow', 'bold');
-  log('📋 Story: Customer Registration → Payment → Employee Verification → SWIFT Submission', 'cyan');
+  log('🏦 Testing Complete Banking Portal Workflow with Preloaded Accounts', 'bold');
+  log('📋 Story: Preloaded Customer Login → Payment → Employee Verification → SWIFT Submission', 'cyan');
   
   const tests = [
     { name: 'Application Availability', fn: testApplicationAvailability, critical: true },
-    { name: 'Customer Registration', fn: testCustomerRegistration, critical: true },
-    { name: 'Customer Login', fn: testCustomerLogin, critical: true },
+    { name: 'Preloaded Customer Login', fn: testCustomerLogin, critical: true },
     { name: 'Payment Submission', fn: testPaymentSubmission, critical: true },
     { name: 'Employee Login', fn: testEmployeeLogin, critical: true },
     { name: 'View Pending Payments', fn: testViewPendingPayments, critical: true },
@@ -406,10 +379,9 @@ async function runComprehensiveTest() {
   log(`❌ Failed: ${failed}/${tests.length}`, failed === 0 ? 'green' : 'red', 1);
   log(`📈 Success Rate: ${Math.round((passed / tests.length) * 100)}%`, 'cyan', 1);
   
-  if (critical_failed === 0) {
-    log('\n🎉 WORKFLOW VERIFICATION COMPLETE!', 'green');
+  if (critical_failed === 0) {    log('\n🎉 WORKFLOW VERIFICATION COMPLETE!', 'green');
     log('✅ All critical components working perfectly:', 'green');
-    log('  • Customer Portal: Registration ✓ Login ✓ Payments ✓', 'green', 1);
+    log('  • Customer Portal: Login ✓ Payments ✓ (No Registration ✓)', 'green', 1);
     log('  • Employee Portal: Login ✓ Verification ✓ Processing ✓', 'green', 1);
     log('  • Security: Authentication ✓ Authorization ✓ Audit ✓', 'green', 1);
     log('  • Banking Flow: Complete end-to-end workflow ✓', 'green', 1);

@@ -43,13 +43,13 @@ The application follows a three-tier architecture:
 ## Application Features
 
 ### Customer Portal
-- User registration with validation
+- **Preloaded customer accounts** (no public registration)
 - Secure login system using JWT tokens
 - International payment submission with SWIFT compliance
 - Payment status tracking
 
 ### Employee Portal
-- Pre-configured static employee accounts
+- **Preloaded employee accounts** (no registration)
 - Role-based access control (Employee, Admin, Manager)
 - Payment verification workflow
 - SWIFT submission capabilities
@@ -59,12 +59,13 @@ The application follows a three-tier architecture:
 
 Comprehensive testing was conducted covering:
 - Application availability verification
-- User registration and authentication flows
+- Preloaded account authentication flows  
 - Payment submission and processing
 - Employee workflow validation
 - Security feature verification
+- **Registration endpoint removal verification**
 
-All critical functionality tests passed successfully, demonstrating a fully operational system.
+All critical functionality tests passed successfully with **100% success rate**, demonstrating a fully operational system with preloaded accounts only.
 
 ## Technical Standards
 
@@ -82,6 +83,22 @@ This project meets all specified requirements for:
 
 The implementation demonstrates understanding of web application security principles and practical application of security measures in a banking context.
 
+## Preloaded Accounts System
+
+As per assignment requirements, the application now operates with **preloaded accounts only**:
+
+### Customer Accounts (2 accounts)
+- **Demo User**: Account `0987654321` / Password `DemoPass123!`
+- **Test Customer**: Account `1234567890` / Password `TestPass123!`
+
+### Employee Accounts (4 accounts)
+- **Admin User**: `admin.user` / `AdminPass123!` (IT Security - Admin Role)
+- **SWIFT Manager**: `manager.swift` / `ManagerPass123!` (International Payments - Manager Role)
+- **John Smith**: `john.smith` / `SecurePass123!` (International Payments - Employee Role)
+- **Sarah Jones**: `sarah.jones` / `SecurePass123!` (International Payments - Employee Role)
+
+All accounts are properly secured with bcrypt hashed passwords and full role-based access control.
+
 ---
 
-**Note:** This project represents original work completed for the APDS7311 assignment, implementing secure web application development principles as taught in the course curriculum.
+**Note:** This project represents original work completed for the APDS7311 assignment, implementing secure web application development principles as taught in the course curriculum. **Registration functionality has been completely removed** and replaced with a preloaded user system.

@@ -79,14 +79,6 @@ const createValidationChain = (field) => {
 
 // Pre-defined validation chains
 const validationChains = {
-  registration: [
-    createValidationChain('fullName'),
-    createValidationChain('idNumber'),
-    createValidationChain('accountNumber'),
-    createValidationChain('username'),
-    createValidationChain('password')
-  ],
-  
   login: [
     createValidationChain('accountNumber'),
     body('password').isLength({ min: 1 }).withMessage('Password is required')
@@ -124,24 +116,6 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-// Comprehensive validation function for manual use
-const validateRegistrationData = (data) => {
-  const results = {};
-  const fields = ['fullName', 'idNumber', 'accountNumber', 'username', 'password'];
-  
-  let isValid = true;
-  
-  fields.forEach(field => {
-    const result = validateField(field, data[field]);
-    results[field] = result;
-    if (!result.isValid) {
-      isValid = false;
-    }
-  });
-  
-  return { isValid, results };
-};
-
 module.exports = {
   REGEX_PATTERNS,
   ERROR_MESSAGES,
@@ -149,6 +123,5 @@ module.exports = {
   sanitizeInput,
   validationChains,
   handleValidationErrors,
-  validateRegistrationData,
   createValidationChain
 };
