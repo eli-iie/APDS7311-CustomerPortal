@@ -352,13 +352,14 @@ jobs:
             echo "NPM version:"
             npm --version
             echo "Java version:"
-            java -version
-            echo "Checking source files:"
+            java -version            echo "Checking source files:"
             ls -la client/src/ || echo "Client src not found"
             ls -la server/ || echo "Server not found"
             echo "SonarCloud configuration:"
             cat sonar-project.properties || echo "sonar-project.properties not found"
-        # Run SonarCloud analysis with focus on hotspots and code smells      - run:
+      
+      # Run SonarCloud analysis with focus on hotspots and code smells
+      - run:
           name: Run SonarCloud Analysis
           command: |
             echo "Starting SonarCloud analysis with focus on hotspots and code smells..."
