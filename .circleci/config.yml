@@ -460,11 +460,11 @@ jobs:
 workflows:
   version: 2
   security-pipeline:
-    jobs:
-      - setup-and-lint
+    jobs:      - setup-and-lint
       - security-testing:
           requires:
-            - setup-and-lint      - sast-analysis:
+            - setup-and-lint
+      - sast-analysis:
           requires:
             - setup-and-lint
       - sca-analysis:
