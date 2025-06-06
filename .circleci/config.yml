@@ -28,8 +28,7 @@ jobs:
             # Check if all required files exist
             echo "Checking server structure..."
             ls -la config/ models/ routes/ middleware/ utils/
-            echo "✅ Server structure validation passed"
-      - run:
+            echo "✅ Server structure validation passed"      - run:
           name: Build Client Application
           command: |
             cd client
@@ -42,7 +41,8 @@ jobs:
             cd server
             npm audit --audit-level high || echo "Server audit completed with warnings"
             cd ../client
-            npm audit --audit-level high || echo "Client audit completed with warnings"      - run:
+            npm audit --audit-level high || echo "Client audit completed with warnings"
+      - run:
           name: Code Quality Check
           command: |
             echo "Running basic code quality checks..."
@@ -52,10 +52,10 @@ jobs:
               echo "⚠️  Warning: .env files detected in repository"
             else
               echo "✅ No .env files found in repository"
-            fi
-            echo "Checking file permissions..."
+            fi            echo "Checking file permissions..."
             ls -la index.js config/ models/ routes/
-            echo "✅ Code quality check completed"      - run:
+            echo "✅ Code quality check completed"
+      - run:
           name: SonarCloud Analysis
           command: |
             echo "Running SonarCloud analysis..."
