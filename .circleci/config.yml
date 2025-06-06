@@ -17,7 +17,8 @@ jobs:
           app-dir: client
       - run:
           name: Test Server Syntax
-          command: |            cd server
+          command: |
+            cd server
             node -c index.js
             echo "✅ Server syntax validation passed"
       - run:
@@ -49,44 +50,13 @@ jobs:
             cd server
             echo "Checking for .env files in repo..."
             if find . -name "*.env" -not -path "./node_modules/*" | head -5; then
-              echo "⚠️  Warning: .env files detected in repository"            else
+              echo "⚠️  Warning: .env files detected in repository"
+            else
               echo "✅ No .env files found in repository"
             fi
             echo "Checking file permissions..."
             ls -la index.js config/ models/ routes/
             echo "✅ Code quality check completed"
-      - run:
-          name: SonarCloud Analysis
-          command: |
-            echo "Running SonarCloud analysis..."
-            
-            # Check if SONAR_TOKEN is available
-            if [ -z "$SONAR_TOKEN" ]; then
-              echo "⚠️  SONAR_TOKEN not found. Skipping SonarCloud analysis."
-              echo "To enable SonarCloud:"
-              echo "1. Get your token from https://sonarcloud.io/account/security"
-              echo "2. Add SONAR_TOKEN to your CircleCI project environment variables"
-              echo "3. Re-run the pipeline"
-              exit 0
-            fi
-            
-            # Install SonarQube Scanner
-            npm install -g sonarqube-scanner
-            
-            # Run SonarCloud analysis
-            sonar-scanner \
-              -Dsonar.projectKey=eli-iie_APDS7311-CustomerPortal \
-              -Dsonar.organization=eli-iie \
-              -Dsonar.sources=server,client/src \
-              -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.token=${SONAR_TOKEN} \
-              -Dsonar.projectName="APDS7311 Customer Portal" \
-              -Dsonar.projectVersion=1.0 \
-              -Dsonar.exclusions="**/node_modules/**,**/build/**,**/*.test.js,**/ssl/**" \
-              -Dsonar.javascript.environments=node,browser \
-              -Dsonar.sourceEncoding=UTF-8
-            
-            echo "✅ SonarCloud analysis completed"
 
 workflows:
   build-test-deploy:
