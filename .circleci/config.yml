@@ -22,13 +22,13 @@ jobs:
             node -c index.js
             echo "✅ Server syntax validation passed"
       - run:
-          name: Run Basic Server Tests
-          command: |
+          name: Run Basic Server Tests          command: |
             cd server
             # Check if all required files exist
             echo "Checking server structure..."
             ls -la config/ models/ routes/ middleware/ utils/
-            echo "✅ Server structure validation passed"      - run:
+            echo "✅ Server structure validation passed"
+      - run:
           name: Build Client Application
           command: |
             cd client
@@ -49,10 +49,10 @@ jobs:
             cd server
             echo "Checking for .env files in repo..."
             if find . -name "*.env" -not -path "./node_modules/*" | head -5; then
-              echo "⚠️  Warning: .env files detected in repository"
-            else
+              echo "⚠️  Warning: .env files detected in repository"            else
               echo "✅ No .env files found in repository"
-            fi            echo "Checking file permissions..."
+            fi
+            echo "Checking file permissions..."
             ls -la index.js config/ models/ routes/
             echo "✅ Code quality check completed"
       - run:
