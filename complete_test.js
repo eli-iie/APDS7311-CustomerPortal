@@ -70,33 +70,30 @@ async function testBackendHealth() {
 
 async function testPreloadedAccounts() {
     console.log('\n👥 Testing preloaded accounts...');
-    
-    // Test customer accounts
+      // Test customer accounts - using account numbers
     const customers = [
-        { username: 'demo_user', password: 'DemoPass123!', name: 'Demo Customer' },
-        { username: 'jane_customer', password: 'CustomerPass123!', name: 'Jane Customer' },
-        { username: 'bob_customer', password: 'CustomerPass123!', name: 'Bob Customer' }
+        { accountNumber: '0987654321', password: 'DemoPass123!', name: 'Demo Customer' },
+        { accountNumber: '1234567890', password: 'TestPass123!', name: 'Test Customer' }
     ];
-    
-    console.log('   Testing customer accounts:');
+      console.log('   Testing customer accounts:');
     for (const customer of customers) {
         try {
             const response = await axios.post('http://localhost:5001/api/auth/login', {
-                username: customer.username,
+                accountNumber: customer.accountNumber,
                 password: customer.password
             }, { timeout: 5000 });
             
-            console.log(`   ✅ ${customer.name} (${customer.username}) - Login successful`);
+            console.log(`   ✅ ${customer.name} (${customer.accountNumber}) - Login successful`);
         } catch (error) {
-            console.log(`   ❌ ${customer.name} (${customer.username}) - Login failed: ${error.response?.data?.message || error.message}`);
+            console.log(`   ❌ ${customer.name} (${customer.accountNumber}) - Login failed: ${error.response?.data?.message || error.message}`);
         }
     }
-    
-    // Test employee accounts
+      // Test employee accounts
     const employees = [
-        { username: 'admin_user', password: 'AdminPass123!', name: 'Admin User', role: 'admin' },
-        { username: 'verifier_user', password: 'VerifierPass123!', name: 'Payment Verifier', role: 'verifier' },
-        { username: 'support_user', password: 'SupportPass123!', name: 'Support Staff', role: 'support' }
+        { username: 'john.smith', password: 'SecurePass123!', name: 'John Smith', role: 'employee' },
+        { username: 'sarah.jones', password: 'SecurePass123!', name: 'Sarah Jones', role: 'employee' },
+        { username: 'admin.user', password: 'AdminPass123!', name: 'Admin User', role: 'admin' },
+        { username: 'manager.swift', password: 'ManagerPass123!', name: 'SWIFT Manager', role: 'manager' }
     ];
     
     console.log('   Testing employee accounts:');
@@ -137,26 +134,24 @@ async function testRegistrationRemoval() {
 async function testPaymentFlow() {
     console.log('\n💳 Testing payment flow...');
     
-    try {
-        // Login as customer first
+    try {        // Login as customer first using account number
         const loginResponse = await axios.post('http://localhost:5001/api/auth/login', {
-            username: 'demo_user',
+            accountNumber: '0987654321',
             password: 'DemoPass123!'
         }, { timeout: 5000 });
         
         const token = loginResponse.data.token;
-        
-        // Test payment submission
+          // Test payment submission
         const paymentData = {
-            recipientName: 'Test Recipient',
-            recipientBank: 'Test Bank',
-            recipientAccount: '1234567890',
-            amount: 100.00,
+            payeeName: 'Test Recipient',
+            payeeAccountNumber: 'US12345678901234567890',
+            amount: '100.00',
             currency: 'USD',
-            swiftCode: 'TESTBNK1'
+            swiftCode: 'TESTBNK1',
+            provider: 'Test Bank'
         };
         
-        const paymentResponse = await axios.post('http://localhost:5001/api/payments/submit', paymentData, {
+        const paymentResponse = await axios.post('http://localhost:5001/api/payment/create', paymentData, {
             headers: { 'Authorization': `Bearer ${token}` },
             timeout: 5000
         });
