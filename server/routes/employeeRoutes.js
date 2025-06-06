@@ -1,5 +1,5 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');  // Commented out - not used in this file
 const jwt = require('jsonwebtoken');
 const Employee = require('../models/Employee');
 const Payment = require('../models/Payment');

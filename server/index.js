@@ -4,10 +4,10 @@ const connectDB = require("./config/db");
 connectDB();
 
 const express = require("express");
-const cors = require("cors");
+// const cors = require("cors");  // Commented out - using built-in security config
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-const { body, validationResult } = require("express-validator");
+// const { body, validationResult } = require("express-validator");  // Commented out - using custom validation
 const fs = require("fs");
 const https = require("https");
 const authRoutes = require("./routes/authRoutes");
@@ -85,7 +85,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/employee", employeeRoutes);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error(err.stack);
   res.status(500).json({ 
     error: 'Something went wrong!',
