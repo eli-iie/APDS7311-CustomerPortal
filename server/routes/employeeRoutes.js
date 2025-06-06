@@ -10,16 +10,21 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  try {
-    // Input validation
+  try {    // Input validation
     const usernameRegex = /^[a-zA-Z0-9_.]{3,20}$/;
     
     if (!usernameRegex.test(username)) {
       return res.status(400).json({ message: 'Invalid username format' });
     }
     
-    // Check if employee exists and is active
-    const employee = await Employee.findOne({ username, isActive: true });
+    // Sanitize username to prevent NoSQL injection
+    const sanitizedUsername = username.toString().trim();
+    
+    // Check if employee exists and is active - use exact match with sanitized input
+    const employee = await Employee.findOne({ 
+      username: { $eq: sanitizedUsername }, 
+      isActive: { $eq: true } 
+    });
     if (!employee) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -338,17 +343,22 @@ router.post('/payments/submit-to-swift', verifyEmployeeToken, async (req, res) =
     if (!['manager', 'admin'].includes(req.employee.role)) {
       return res.status(403).json({ message: 'Access denied - Manager or Admin role required' });
     }
-    
-    const { paymentIds } = req.body;
+      const { paymentIds } = req.body;
     
     if (!paymentIds || !Array.isArray(paymentIds) || paymentIds.length === 0) {
       return res.status(400).json({ message: 'Payment IDs array is required' });
     }
     
-    // Find verified payments
+    // Validate all payment IDs are proper MongoDB ObjectId format
+    const invalidIds = paymentIds.filter(id => !id.match(/^[0-9a-fA-F]{24}$/));
+    if (invalidIds.length > 0) {
+      return res.status(400).json({ message: 'Invalid payment ID format detected' });
+    }
+    
+    // Find verified payments - using validated IDs
     const payments = await Payment.find({
-      _id: { $in: paymentIds },
-      status: 'verified'
+      _id: { $in: paymentIds.map(id => id.toString()) },
+      status: { $eq: 'verified' }
     });
     
     if (payments.length === 0) {

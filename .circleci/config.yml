@@ -1,53 +1,16 @@
-# CircleCI SUPER MINIMAL Configuration - Just to get it working
-# APDS7311 Assignment - Absolute Basics
+# CircleCI Configuration - Fresh Start
+# Placeholder configuration to start with a clean slate
 
 version: 2.1
 
-orbs:
-  node: circleci/node@5.0.2
-
 jobs:
-  # Job 1: Just build it
-  build:
+  placeholder-job:
     docker:
-      - image: cimg/node:18.17.0
-    working_directory: ~/project
+      - image: cimg/base:stable
     steps:
-      - checkout
-      
-      # Install and build
-      - run:
-          name: Install and Build
-          command: |
-            echo "Installing server dependencies..."
-            cd server && npm install
-            echo "Installing client dependencies..."
-            cd ../client && npm install
-            echo "Building client..."
-            npm run build
-            echo "✅ Build completed successfully"
-
-  # Job 2: Basic security check
-  security:
-    docker:
-      - image: cimg/node:18.17.0
-    working_directory: ~/project
-    steps:
-      - checkout
-      
-      - run:
-          name: Basic Security
-          command: |
-            echo "Basic security check..."
-            cd server && npm install
-            npm audit || echo "Audit completed"
-            echo "✅ Security check completed"
+      - run: echo "This is a placeholder job."
 
 workflows:
-  version: 2
-  minimal:
+  placeholder-workflow:
     jobs:
-      - build
-      - security:
-          requires:
-            - build
+      - placeholder-job

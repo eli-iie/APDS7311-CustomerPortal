@@ -109,17 +109,11 @@ if (process.env.NODE_ENV === 'production' && process.env.SSL_KEY && process.env.
   https.createServer(sslOptions, app).listen(PORT, () => {
     console.log(`🔒 HTTPS Server running securely on port ${PORT}`);
     console.log(`🛡️  Security features enabled for APDS7311 assignment`);
-  });
-    // Redirect HTTP to HTTPS with proper validation
+  });  // Redirect HTTP to HTTPS with completely static URL
   const httpApp = express();
   httpApp.use((req, res) => {
-    // Validate and sanitize the host header to prevent header injection
-    const host = req.headers.host;
-    if (!host || !/^[a-zA-Z0-9.-]+:\d+$|^[a-zA-Z0-9.-]+$/.test(host)) {
-      return res.status(400).json({ error: 'Invalid host header' });
-    }
-    const sanitizedHost = host.replace(/[^a-zA-Z0-9.-:]/g, '');
-    res.redirect(301, `https://${sanitizedHost}${req.url}`);
+    // Static redirect to prevent any user-controlled input
+    res.redirect(301, 'https://localhost:5001/');
   });
   httpApp.listen(80, () => {
     console.log('HTTP redirect server running on port 80');
