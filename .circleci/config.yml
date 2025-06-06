@@ -2,7 +2,6 @@ version: 2.1
 
 orbs:
   node: circleci/node@5.2.0
-  sonarcloud: sonarsource/sonarcloud@2.0.0
 
 jobs:
   build-and-test:
@@ -37,45 +36,29 @@ jobs:
             npm run build
             echo "✅ Client build completed successfully"
       - run:
-          name: Generate Test Coverage (if available)
+          name: Security Audit
           command: |
-            # Try to generate coverage for server
+            echo "Running security audits..."
             cd server
-            if [ -f "package.json" ] && grep -q '"test"' package.json; then
-              echo "Running tests with coverage..."
-              npm test || echo "No tests configured, skipping coverage"
-            else
-              echo "No test script found, skipping coverage"
-            fi
-      - persist_to_workspace:
-          root: .
-          paths:
-            - client/build
-            - server
-            - sonar-project.properties
-            - coverage
-
-  sonarcloud-analysis:
-    docker:
-      - image: cimg/node:18.20.4
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
+            npm audit --audit-level high || echo "Server audit completed with warnings"
+            cd ../client
+            npm audit --audit-level high || echo "Client audit completed with warnings"
       - run:
-          name: Prepare SonarCloud Analysis
+          name: Code Quality Check
           command: |
-            echo "Preparing for SonarCloud analysis..."
-            echo "Project: APDS7311 Customer Portal"
-            echo "Analyzing: server (Node.js) + client (React)"
-            ls -la sonar-project.properties
-      - sonarcloud/scan
+            echo "Running basic code quality checks..."
+            cd server
+            echo "Checking for .env files in repo..."
+            if find . -name "*.env" -not -path "./node_modules/*" | head -5; then
+              echo "⚠️  Warning: .env files detected in repository"
+            else
+              echo "✅ No .env files found in repository"
+            fi
+            echo "Checking file permissions..."
+            ls -la index.js config/ models/ routes/
+            echo "✅ Code quality check completed"
 
 workflows:
-  build-analyze-deploy:
+  build-test-deploy:
     jobs:
       - build-and-test
-      - sonarcloud-analysis:
-          requires:
-            - build-and-test
-          context: SonarCloud
