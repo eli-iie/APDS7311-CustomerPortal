@@ -2,9 +2,10 @@ version: 2.1
 
 orbs:
   node: circleci/node@5.2.0
+  sonarcloud: sonarsource/sonarcloud@2.0.0
 
 jobs:
-  build:
+  build-and-test:
     docker:
       - image: cimg/node:18.20.4
     steps:
@@ -20,13 +21,34 @@ jobs:
           command: |
             cd server
             node -c index.js
+            echo "✅ Server syntax validation passed"
       - run:
           name: Build Client
           command: |
             cd client
             npm run build
+            echo "✅ Client build completed"
+      - persist_to_workspace:
+          root: .
+          paths:
+            - client/build
+            - server
+            - sonar-project.properties
+
+  sonarcloud-analysis:
+    docker:
+      - image: cimg/node:18.20.4
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - sonarcloud/scan
 
 workflows:
-  main:
+  build-analyze:
     jobs:
-      - build
+      - build-and-test
+      - sonarcloud-analysis:
+          requires:
+            - build-and-test
+          context: SonarCloud
