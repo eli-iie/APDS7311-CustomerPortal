@@ -20,9 +20,9 @@ jobs:
           command: |
             cd server
             node -c index.js
-            echo "✅ Server syntax validation passed"
-      - run:
-          name: Run Basic Server Tests          command: |
+            echo "✅ Server syntax validation passed"      - run:
+          name: Run Basic Server Tests
+          command: |
             cd server
             # Check if all required files exist
             echo "Checking server structure..."
