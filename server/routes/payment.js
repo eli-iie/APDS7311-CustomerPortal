@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/authMiddleware');
+const auth = require('../middleware/auth');
 const Payment = require('../models/Payment');
 const AuditTrail = require('../models/AuditTrail');
 
@@ -83,14 +83,30 @@ router.post('/create', auth, async (req, res) => {
       ipAddress: clientIp,
       userAgent: userAgent,
       severity: 'LOW'
-    });
-
-    res.status(201).json({ 
+    });    res.status(201).json({ 
       message: 'Payment submitted successfully',
-      referenceNumber: payment.referenceNumber
-    });
-  } catch (err) {
+      referenceNumber: payment.referenceNumber.toString().trim()
+    });  } catch (err) {
     console.error('Payment creation error:', err);
+    
+    // Log the error for audit trail
+    try {
+      await AuditTrail.log({
+        userId: req.user?.id || 'unknown',
+        userModel: 'User',
+        action: 'PAYMENT_CREATION_FAILED',
+        entityType: 'Payment',
+        description: `Payment creation failed: ${err.message}`,
+        ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+        userAgent: req.get('User-Agent') || 'Unknown',
+        severity: 'HIGH',
+        success: false,
+        errorMessage: err.message
+      });
+    } catch (auditErr) {
+      console.error('Failed to log payment creation error:', auditErr);
+    }
+    
     res.status(500).json({ error: 'Failed to create payment' });
   }
 });
@@ -103,6 +119,26 @@ router.get('/my-payments', auth, async (req, res) => {
       .select('-__v');
     res.json(payments);
   } catch (err) {
+    console.error('Failed to fetch user payments:', err);
+    
+    // Log the error for audit trail
+    try {
+      await AuditTrail.log({
+        userId: req.user?.id || 'unknown',
+        userModel: 'User',
+        action: 'FETCH_PAYMENTS_FAILED',
+        entityType: 'Payment',
+        description: `Failed to fetch user payments: ${err.message}`,
+        ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+        userAgent: req.get('User-Agent') || 'Unknown',
+        severity: 'MEDIUM',
+        success: false,
+        errorMessage: err.message
+      });
+    } catch (auditErr) {
+      console.error('Failed to log payment fetch error:', auditErr);
+    }
+    
     res.status(500).json({ error: 'Failed to fetch payments' });
   }
 });
@@ -116,6 +152,26 @@ router.get('/pending', async (req, res) => {
       .select('-__v');
     res.json(payments);
   } catch (err) {
+    console.error('Failed to fetch pending payments:', err);
+    
+    // Log the error for audit trail
+    try {
+      await AuditTrail.log({
+        userId: 'system',
+        userModel: 'System',
+        action: 'FETCH_PENDING_PAYMENTS_FAILED',
+        entityType: 'Payment',
+        description: `Failed to fetch pending payments: ${err.message}`,
+        ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+        userAgent: req.get('User-Agent') || 'Unknown',
+        severity: 'HIGH',
+        success: false,
+        errorMessage: err.message
+      });
+    } catch (auditErr) {
+      console.error('Failed to log pending payments fetch error:', auditErr);
+    }
+    
     res.status(500).json({ error: 'Failed to fetch pending payments' });
   }
 });

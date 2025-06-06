@@ -28,7 +28,9 @@ const {
 } = require("./config/security");
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+// Validate and sanitize PORT to prevent injection
+const rawPort = process.env.PORT;
+const PORT = (rawPort && /^\d+$/.test(rawPort)) ? parseInt(rawPort, 10) : 5001;
 
 // Apply comprehensive security configuration
 app.use(securityHeaders);
@@ -99,31 +101,33 @@ app.use((req, res) => {
 });
 
 // Start server with SSL support for APDS7311 Assignment
-if (process.env.NODE_ENV === 'production' && process.env.SSL_KEY && process.env.SSL_CERT) {
+// Use static configuration to prevent environment variable manipulation
+const USE_SSL = process.env.USE_SSL === 'true';
+const SSL_KEY_PATH = './ssl/server.key';
+const SSL_CERT_PATH = './ssl/server.crt';
+
+if (USE_SSL && fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH)) {
   // HTTPS Server for Production
-  const sslOptions = {
-    key: fs.readFileSync(process.env.SSL_KEY),
-    cert: fs.readFileSync(process.env.SSL_CERT)
-  };
-  
-  https.createServer(sslOptions, app).listen(PORT, () => {
-    console.log(`🔒 HTTPS Server running securely on port ${PORT}`);
-    console.log(`🛡️  Security features enabled for APDS7311 assignment`);
-  });  // Redirect HTTP to HTTPS with completely static URL
-  const httpApp = express();
-  httpApp.use((req, res) => {
-    // Static redirect to prevent any user-controlled input
-    res.redirect(301, 'https://localhost:5001/');
-  });
-  httpApp.listen(80, () => {
-    console.log('HTTP redirect server running on port 80');
-  });
-  
+  try {
+    const sslOptions = {
+      key: fs.readFileSync(SSL_KEY_PATH),
+      cert: fs.readFileSync(SSL_CERT_PATH)
+    };    https.createServer(sslOptions, app).listen(PORT, () => {
+      console.log('🔒 HTTPS Server running securely');
+      console.log('🛡️  Security features enabled for APDS7311 assignment');
+    });  } catch (sslError) {
+    console.error('SSL configuration error, falling back to HTTP:', sslError.message);
+    startHttpServer();
+  }
 } else {
+  startHttpServer();
+}
+
+function startHttpServer() {
   // HTTP Server for Development
   app.listen(PORT, () => {
-    console.log(`🚀 HTTP Server running on port ${PORT}`);
-    console.log(`🛡️  Security features enabled for APDS7311 assignment`);
-    console.log(`⚠️  Running in development mode - HTTPS disabled`);
+    console.log('🚀 HTTP Server running in development mode');
+    console.log('🛡️  Security features enabled for APDS7311 assignment');
+    console.log('⚠️  Running in development mode - HTTPS disabled');
   });
 }
