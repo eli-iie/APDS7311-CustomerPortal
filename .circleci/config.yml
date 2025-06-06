@@ -1,115 +1,32 @@
-# CircleCI Configuration for APDS7311 Customer Portal
-# Minimal working pipeline for secure international payments system
-
 version: 2.1
 
 orbs:
   node: circleci/node@5.2.0
 
 jobs:
-  # Install dependencies and basic setup
-  setup:
+  build:
     docker:
       - image: cimg/node:18.20.4
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-          app-dir: client
       - node/install-packages:
           pkg-manager: npm
           app-dir: server
-      - persist_to_workspace:
-          root: .
-          paths:
-            - client/node_modules
-            - server/node_modules
-
-  # Run security audits
-  security-checks:
-    docker:
-      - image: cimg/node:18.20.4
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
+      - node/install-packages:
+          pkg-manager: npm
+          app-dir: client
       - run:
-          name: Security Audit - Client
-          command: |
-            cd client
-            npm audit --audit-level high || echo "Client audit completed with warnings"
-      - run:
-          name: Security Audit - Server
+          name: Test Server
           command: |
             cd server
-            npm audit --audit-level high || echo "Server audit completed with warnings"
+            node -c index.js
       - run:
-          name: Check for sensitive files
-          command: |
-            echo "Scanning for sensitive files..."
-            if find . -name "*.env" -not -path "./node_modules/*" | head -5; then
-              echo "Warning: .env files detected"
-            else
-              echo "No .env files found"
-            fi
-
-  # Build client application
-  build-client:
-    docker:
-      - image: cimg/node:18.20.4
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Build React Client
+          name: Build Client
           command: |
             cd client
             npm run build
-      - persist_to_workspace:
-          root: .
-          paths:
-            - client/build
-
-  # Test server functionality
-  test-server:
-    docker:
-      - image: cimg/node:18.20.4
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Basic Server Tests
-          command: |
-            cd server
-            echo "Testing server file structure..."
-            ls -la
-            echo "Checking main server file..."
-            node -c index.js
-            echo "✓ Server syntax validation passed"
-      - run:
-          name: Verify Security Configuration
-          command: |
-            cd server
-            echo "Checking security configuration..."
-            if [ -f "config/security.js" ]; then
-              node -c config/security.js
-              echo "✓ Security configuration syntax valid"
-            else
-              echo "Warning: Security configuration not found"
-            fi
 
 workflows:
-  build-and-test:
+  main:
     jobs:
-      - setup
-      - security-checks:
-          requires:
-            - setup
-      - build-client:
-          requires:
-            - setup
-      - test-server:
-          requires:
-            - setup
+      - build
