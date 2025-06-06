@@ -1,8 +1,17 @@
 # CircleCI + SonarCloud Integration Guide
 
-## ✅ CURRENT STATUS - UPDATED!
-- **CircleCI Pipeline**: ✅ Working with SonarCloud integration
-- **SonarCloud Integration**: ✅ Ready - just needs token configuration
+## ✅ CURRENT STATUS - UPDATED JUNE 7, 2025!
+
+**🚀 SonarCloud Integration Active**: Deployed to main branch (commit 58bbf74)
+**⚠️ Setup Required**: Needs SonarCloud context and token configuration
+
+### Current State:
+- ✅ **CircleCI Config**: Updated with SonarCloud orb and analysis job
+- ✅ **Workspace Persistence**: Build artifacts shared between jobs  
+- ✅ **Two-Job Pipeline**: build-and-test → sonarcloud-analysis
+- ⚠️ **Missing**: SonarCloud context and SONAR_TOKEN (pipeline will fail until configured)
+
+**URGENT**: See `URGENT_SONARCLOUD_SETUP.md` for immediate setup steps!
 
 ## 🚀 QUICK START (Updated June 6, 2025)
 
