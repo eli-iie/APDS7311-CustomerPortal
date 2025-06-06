@@ -1,1 +1,0 @@
- 2jsonXhrclient/public/manifest.json

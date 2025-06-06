@@ -1,7 +1,0 @@
-organization=eli-iie
-projectKey=eli-iie_APDS7311-CustomerPortal
-serverUrl=https://sonarcloud.io
-serverVersion=8.0.0.64232
-dashboardUrl=https://sonarcloud.io/dashboard?id=eli-iie_APDS7311-CustomerPortal
-ceTaskId=AZdB5WHhxDJMSFSTTT4u
-ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZdB5WHhxDJMSFSTTT4u

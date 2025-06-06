@@ -4,10 +4,10 @@ const connectDB = require("./config/db");
 connectDB();
 
 const express = require("express");
-// const cors = require("cors");  // Commented out - using built-in security config
+const cors = require("cors");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-// const { body, validationResult } = require("express-validator");  // Commented out - using custom validation
+const { body, validationResult } = require("express-validator");
 const fs = require("fs");
 const https = require("https");
 const authRoutes = require("./routes/authRoutes");
@@ -85,7 +85,7 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/employee", employeeRoutes);
 
 // Error handling middleware
-app.use((err, req, res, _next) => {
+app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ 
     error: 'Something went wrong!',
@@ -110,11 +110,16 @@ if (process.env.NODE_ENV === 'production' && process.env.SSL_KEY && process.env.
     console.log(`🔒 HTTPS Server running securely on port ${PORT}`);
     console.log(`🛡️  Security features enabled for APDS7311 assignment`);
   });
-  
-  // Redirect HTTP to HTTPS
+    // Redirect HTTP to HTTPS with proper validation
   const httpApp = express();
   httpApp.use((req, res) => {
-    res.redirect(301, `https://${req.headers.host}${req.url}`);
+    // Validate and sanitize the host header to prevent header injection
+    const host = req.headers.host;
+    if (!host || !/^[a-zA-Z0-9.-]+:\d+$|^[a-zA-Z0-9.-]+$/.test(host)) {
+      return res.status(400).json({ error: 'Invalid host header' });
+    }
+    const sanitizedHost = host.replace(/[^a-zA-Z0-9.-:]/g, '');
+    res.redirect(301, `https://${sanitizedHost}${req.url}`);
   });
   httpApp.listen(80, () => {
     console.log('HTTP redirect server running on port 80');

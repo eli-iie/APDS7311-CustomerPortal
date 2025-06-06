@@ -1,5 +1,5 @@
 const express = require('express');
-// const bcrypt = require('bcryptjs');  // Commented out - not used in this file
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Employee = require('../models/Employee');
 const Payment = require('../models/Payment');
@@ -119,8 +119,8 @@ const verifyEmployeeToken = (req, res, next) => {
     }
     
     req.employee = decoded;
-    next();
-  } catch (err) {
+    next();  } catch (err) {
+    console.error('Employee token verification error:', err);
     res.status(401).json({ message: 'Token is not valid' });
   }
 };
@@ -189,7 +189,13 @@ router.get('/payments/verified', verifyEmployeeToken, async (req, res) => {
 // Get payment details for verification
 router.get('/payments/:paymentId', verifyEmployeeToken, async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.paymentId)
+    // Validate payment ID format
+    const paymentId = req.params.paymentId;
+    if (!paymentId || !paymentId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid payment ID format' });
+    }
+    
+    const payment = await Payment.findById(paymentId)
       .populate('customerId', 'fullName accountNumber idNumber')
       .populate('verifiedBy', 'fullName employeeId');
     
@@ -220,7 +226,13 @@ router.get('/payments/:paymentId', verifyEmployeeToken, async (req, res) => {
 // Verify a payment
 router.put('/payments/:paymentId/verify', verifyEmployeeToken, async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.paymentId);
+    // Validate payment ID format
+    const paymentId = req.params.paymentId;
+    if (!paymentId || !paymentId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid payment ID format' });
+    }
+    
+    const payment = await Payment.findById(paymentId);
     
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' });
@@ -267,12 +279,17 @@ router.put('/payments/:paymentId/verify', verifyEmployeeToken, async (req, res) 
 router.put('/payments/:paymentId/reject', verifyEmployeeToken, async (req, res) => {
   try {
     const { rejectionReason } = req.body;
-    
-    if (!rejectionReason || rejectionReason.trim().length < 10) {
+      if (!rejectionReason || rejectionReason.trim().length < 10) {
       return res.status(400).json({ message: 'Rejection reason must be at least 10 characters' });
     }
     
-    const payment = await Payment.findById(req.params.paymentId);
+    // Validate payment ID format
+    const paymentId = req.params.paymentId;
+    if (!paymentId || !paymentId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: 'Invalid payment ID format' });
+    }
+    
+    const payment = await Payment.findById(paymentId);
     
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' });
