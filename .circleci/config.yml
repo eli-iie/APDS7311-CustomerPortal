@@ -17,10 +17,10 @@ jobs:
           app-dir: client
       - run:
           name: Test Server Syntax
-          command: |
-            cd server
+          command: |            cd server
             node -c index.js
-            echo "✅ Server syntax validation passed"      - run:
+            echo "✅ Server syntax validation passed"
+      - run:
           name: Run Basic Server Tests
           command: |
             cd server
