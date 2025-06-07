@@ -58,7 +58,6 @@ jobs:
             echo "Checking file permissions..."
             ls -la index.js config/ models/ routes/
             echo "✅ Code quality check completed"
-            
       - persist_to_workspace:
           root: .
           paths:

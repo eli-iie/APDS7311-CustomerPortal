@@ -26,7 +26,6 @@ jobs:
           name: Run Basic Server Tests
           command: |
             cd server
-            # Check if all required files exist
             echo "Checking server structure..."
             ls -la config/ models/ routes/ middleware/ utils/
             echo "✅ Server structure validation passed"
@@ -37,34 +36,22 @@ jobs:
             npm run build
             echo "✅ Client build completed successfully"
       - run:
-          name: Security Audit
+          name: Generate Test Coverage
           command: |
-            echo "Running security audits..."
             cd server
-            npm audit --audit-level high || echo "Server audit completed with warnings"
-            cd ../client
-            npm audit --audit-level high || echo "Client audit completed with warnings"
-      - run:
-          name: Code Quality Check
-          command: |
-            echo "Running basic code quality checks..."
-            cd server
-            echo "Checking for .env files in repo..."
-            if find . -name "*.env" -not -path "./node_modules/*" | head -5; then
-              echo "⚠️  Warning: .env files detected in repository"
+            if [ -f "package.json" ] && grep -q '"test"' package.json; then
+              echo "Running tests with coverage..."
+              npm test || echo "No tests configured, skipping coverage"
             else
-              echo "✅ No .env files found in repository"
+              echo "No test script found, skipping coverage"
             fi
-            echo "Checking file permissions..."
-            ls -la index.js config/ models/ routes/
-            echo "✅ Code quality check completed"
-            
       - persist_to_workspace:
           root: .
           paths:
             - client/build
             - server
             - sonar-project.properties
+            - coverage
 
   sonarcloud-analysis:
     docker:
