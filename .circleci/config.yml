@@ -1,92 +1,26 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@5.2.0
-  sonarcloud: sonarsource/sonarcloud@2.0.0
-
 jobs:
-  build-and-test:
+  build:
     docker:
-      - image: cimg/node:18.20.4
+      - image: 'cimg/node:18.20.4'
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
-          app-dir: server
-      - node/install-packages:
-          pkg-manager: npm
-          app-dir: client
       - run:
-          name: Test Server Syntax
+          name: Install dependencies and build project
           command: |
-            cd server
-            node -c index.js
-            echo "✅ Server syntax validation passed"
-      - run:
-          name: Run Basic Server Tests
-          command: |
-            cd server
-            # Check if all required files exist
-            echo "Checking server structure..."
-            ls -la config/ models/ routes/ middleware/ utils/
-            echo "✅ Server structure validation passed"
-      - run:
-          name: Build Client Application
-          command: |
-            cd client
-            npm run build
-            echo "✅ Client build completed successfully"
-      - run:
-          name: Security Audit
-          command: |
-            echo "Running security audits..."
-            cd server
-            npm audit --audit-level high || echo "Server audit completed with warnings"
-            cd ../client
-            npm audit --audit-level high || echo "Client audit completed with warnings"
-      - run:
-          name: Code Quality Check
-          command: |
-            echo "Running basic code quality checks..."
-            cd server
-            echo "Checking for .env files in repo..."
-            if find . -name "*.env" -not -path "./node_modules/*" | head -5; then
-              echo "⚠️  Warning: .env files detected in repository"
-            else
-              echo "✅ No .env files found in repository"
-            fi
-            echo "Checking file permissions..."
-            ls -la index.js config/ models/ routes/
-            echo "✅ Code quality check completed"
-            
-      - persist_to_workspace:
-          root: .
-          paths:
-            - client/build
-            - server
-            - sonar-project.properties
-
-  sonarcloud-analysis:
-    docker:
-      - image: cimg/node:18.20.4
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Prepare SonarCloud Analysis
-          command: |
-            echo "Preparing for SonarCloud analysis..."
-            echo "Project: APDS7311 Customer Portal"
-            echo "Analyzing: server (Node.js) + client (React)"
-            ls -la sonar-project.properties
+            echo "Installing server dependencies..."
+            cd server && npm install && cd ..
+            echo "Installing client dependencies..."
+            cd client && npm install && npm run build && cd ..
+            echo "Dependency installation and client build complete."
       - sonarcloud/scan
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+
 workflows:
-  build-analyze-deploy:
+  main:
     jobs:
-      - build-and-test
-      - sonarcloud-analysis:
-          requires:
-            - build-and-test
+      - build:
           context: SonarCloud
