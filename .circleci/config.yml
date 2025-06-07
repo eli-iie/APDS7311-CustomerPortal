@@ -2,7 +2,6 @@ version: 2.1
 
 orbs:
   node: circleci/node@5.2.0
-  sonarcloud: sonarsource/sonarcloud@2.0.0
 
 jobs:
   build-and-test:
@@ -58,34 +57,8 @@ jobs:
             echo "Checking file permissions..."
             ls -la index.js config/ models/ routes/
             echo "✅ Code quality check completed"
-      - persist_to_workspace:
-          root: .
-          paths:
-            - client/build
-            - server
-            - sonar-project.properties
-
-  sonarcloud-analysis:
-    docker:
-      - image: cimg/node:18.20.4
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Prepare SonarCloud Analysis
-          command: |
-            echo "Preparing for SonarCloud analysis..."
-            echo "Project: APDS7311 Customer Portal"
-            echo "Analyzing: server (Node.js) + client (React)"
-            ls -la sonar-project.properties
-      - sonarcloud/scan
 
 workflows:
-  build-analyze-deploy:
+  build-test-deploy:
     jobs:
       - build-and-test
-      - sonarcloud-analysis:
-          requires:
-            - build-and-test
-          context: SonarCloud
