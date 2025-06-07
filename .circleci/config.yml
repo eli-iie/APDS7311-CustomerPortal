@@ -7,13 +7,25 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies and build project
+          name: Install server dependencies
           command: |
             echo "Installing server dependencies..."
-            cd server && npm install && cd ..
-            echo "Installing client dependencies..."
-            cd client && npm install && npm run build && cd ..
-            echo "Dependency installation and client build complete."
+            cd server && npm install
+      - run:
+          name: Run server tests and generate coverage report
+          command: |
+            echo "Running server tests..."
+            cd server && npm test -- --coverage --reporters=default --reporters=jest-junit
+      - run:
+          name: Install client dependencies and build client
+          command: |
+            echo "Installing client dependencies and building client..."
+            cd client && npm install && npm run build
+      - run:
+          name: Run client tests and generate coverage report
+          command: |
+            echo "Running client tests..."
+            cd client && npm test -- --coverage --reporters=default --reporters=jest-junit
       - sonarcloud/scan
 
 orbs:
