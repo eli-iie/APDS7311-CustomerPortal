@@ -42,8 +42,7 @@ jobs:
             cd server
             npm audit --audit-level high || echo "Server audit completed with warnings"
             cd ../client
-            npm audit --audit-level high || echo "Client audit completed with warnings"
-      - run:
+            npm audit --audit-level high || echo "Client audit completed with warnings"      - run:
           name: Code Quality Check
           command: |
             echo "Running basic code quality checks..."
@@ -57,6 +56,24 @@ jobs:
             echo "Checking file permissions..."
             ls -la index.js config/ models/ routes/
             echo "✅ Code quality check completed"
+            
+      - run:
+          name: Install SonarCloud Scanner
+          command: |
+            echo "Installing SonarCloud scanner..."
+            npm install -g sonarqube-scanner
+            echo "✅ SonarCloud scanner installed"
+            
+      - run:
+          name: Prepare for Future SonarCloud Analysis
+          command: |
+            echo "Checking SonarCloud configuration..."
+            if [ -f "sonar-project.properties" ]; then
+              echo "✅ Found sonar-project.properties"
+              cat sonar-project.properties | grep sonar.projectKey
+            else
+              echo "⚠️ Missing sonar-project.properties"
+            fi
 
 workflows:
   build-test-deploy:
