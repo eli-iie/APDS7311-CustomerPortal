@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const Employee = require('../models/Employee');
 const Payment = require('../models/Payment');
 const AuditTrail = require('../models/AuditTrail');
+const { employeeAuth } = require('../middleware/auth');
 const router = express.Router();
 
 // Employee Login Route
@@ -464,6 +465,56 @@ router.get('/audit-trail', verifyEmployeeToken, async (req, res) => {
   } catch (err) {
     console.error('Get audit trail error:', err);
     res.status(500).json({ message: 'Failed to fetch audit trail' });
+  }
+});
+
+// Employee Dashboard Route
+router.get('/dashboard', verifyEmployeeToken, async (req, res) => {
+  try {
+    res.json({
+      message: 'Employee dashboard access successful',
+      employee: {
+        id: req.employee.id,
+        username: req.employee.username,
+        fullName: req.employee.fullName,
+        role: req.employee.role,
+        department: req.employee.department,
+        employeeId: req.employee.employeeId
+      }
+    });
+  } catch (err) {
+    console.error('Employee dashboard error:', err);
+    res.status(500).json({ message: 'Failed to access employee dashboard' });
+  }
+});
+
+// Employee Stats Route
+router.get('/stats', verifyEmployeeToken, async (req, res) => {
+  try {
+    const stats = {
+      totalPayments: await Payment.countDocuments(),
+      pendingPayments: await Payment.countDocuments({ status: 'pending' }),
+      approvedPayments: await Payment.countDocuments({ status: 'approved' }),
+      rejectedPayments: await Payment.countDocuments({ status: 'rejected' })
+    };
+    res.json(stats);
+  } catch (err) {
+    console.error('Employee stats error:', err);
+    res.status(500).json({ message: 'Failed to fetch employee stats' });
+  }
+});
+
+// Pending Payments Route
+router.get('/pending-payments', verifyEmployeeToken, async (req, res) => {
+  try {
+    const pendingPayments = await Payment.find({ status: 'pending' })
+      .populate('customerId', 'fullName accountNumber')
+      .sort({ createdAt: -1 })
+      .select('-__v');
+    res.json(pendingPayments);
+  } catch (err) {
+    console.error('Pending payments error:', err);
+    res.status(500).json({ message: 'Failed to fetch pending payments' });
   }
 });
 

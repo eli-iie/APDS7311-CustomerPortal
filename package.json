@@ -1,8 +1,24 @@
 {
-  "dependencies": {
-    "axios": "^1.9.0"
-  },
+  "name": "apds7311-customer-portal",
+  "version": "1.0.0",
+  "description": "Secure Customer International Payments Portal for APDS7311",
   "scripts": {
-    "test": "echo \"No test framework configured\" && exit 1"
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "cd server && npm run dev",
+    "client:dev": "cd client && npm run start:windows",
+    "build": "cd client && npm run build",
+    "start:production": "npm run build && cd server && npm start",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "help": "echo \"🚀 APDS7311 Development Commands:\" && echo \"npm run dev - Start development mode (Frontend HTTPS:3000 + Backend HTTPS:5001)\" && echo \"npm run start:production - Start production mode (Single HTTPS:5001 server)\" && echo \"npm run build - Build React for production\" && echo \"npm run install:all - Install all dependencies\""
+  },
+  "devDependencies": {
+    "bcryptjs": "^3.0.2",
+    "concurrently": "^9.1.2",
+    "dotenv": "^16.5.0",
+    "mongoose": "^8.15.1"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "colors": "^1.4.0"
   }
 }

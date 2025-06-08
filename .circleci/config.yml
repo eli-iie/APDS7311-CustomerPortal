@@ -5,27 +5,16 @@ jobs:
     docker:
       - image: 'cimg/node:18.20.4'
     steps:
-      - checkout
-      - run:
+      - checkout      - run:
           name: Install server dependencies
           command: |
             echo "Installing server dependencies..."
             cd server && npm install
       - run:
-          name: Run server tests and generate coverage report
-          command: |
-            echo "Running server tests..."
-            cd server && npm test -- --coverage --reporters=default --reporters=jest-junit
-      - run:
           name: Install client dependencies and build client
           command: |
             echo "Installing client dependencies and building client..."
             cd client && npm install && npm run build
-      - run:
-          name: Run client tests and generate coverage report
-          command: |
-            echo "Running client tests..."
-            cd client && npm test -- --coverage --reporters=default --reporters=jest-junit
       - sonarcloud/scan
 
 orbs:

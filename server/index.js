@@ -10,6 +10,7 @@ const MongoStore = require("connect-mongo");
 const { body, validationResult } = require("express-validator");
 const fs = require("fs");
 const https = require("https");
+const path = require("path");
 const authRoutes = require("./routes/authRoutes");
 const paymentRoutes = require("./routes/payment");
 const employeeRoutes = require("./routes/employeeRoutes");
@@ -72,6 +73,28 @@ app.use('/api/payment', paymentLimiter);
 app.use('/api/auth/login', bruteForceProtection);
 app.use('/api/employee/login', bruteForceProtection);
 
+// Root route - Welcome page
+app.get('/', (req, res) => {
+  res.json({
+    message: '🚀 APDS7311 Secure Customer Portal API',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      authentication: '/api/auth',
+      payments: '/api/payment',
+      employee: '/api/employee'
+    },
+    security: {
+      https: process.env.USE_SSL === 'true',
+      corsEnabled: true,
+      rateLimitingEnabled: true,
+      sessionSecurityEnabled: true
+    },
+    status: 'Server running securely with SSL/TLS encryption'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
@@ -84,7 +107,67 @@ app.get('/api/health', (req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/payments", paymentRoutes); // Plural alias for compatibility
 app.use("/api/employee", employeeRoutes);
+
+// API Documentation endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    title: 'APDS7311 Secure Customer Portal API Documentation',
+    version: '1.0.0',
+    description: 'Secure International Payments Portal for Customer and Employee Management',
+    endpoints: {
+      authentication: {
+        base: '/api/auth',
+        endpoints: [
+          'POST /api/auth/register - Customer registration',
+          'POST /api/auth/login - Customer login',
+          'POST /api/auth/logout - Customer logout'
+        ]
+      },
+      payments: {
+        base: '/api/payment',
+        endpoints: [
+          'GET /api/payment - Get customer payments',
+          'POST /api/payment - Create new payment',
+          'PUT /api/payment/:id - Update payment status'
+        ]
+      },
+      employee: {
+        base: '/api/employee',
+        endpoints: [
+          'POST /api/employee/login - Employee login',
+          'GET /api/employee/payments - Get all payments for verification',
+          'PUT /api/employee/payment/:id/verify - Verify a payment'
+        ]
+      }
+    },
+    security: {
+      features: [
+        'HTTPS/SSL encryption',
+        'Rate limiting',
+        'CORS protection',
+        'Input sanitization',
+        'Session management',
+        'Brute force protection'
+      ]
+    }
+  });
+});
+
+// Serve React build files (APDS7311 Single HTTPS Server Approach)
+const clientBuildPath = path.join(__dirname, '../client/build');
+app.use(express.static(clientBuildPath));
+
+// Serve React app for all non-API routes (SPA routing)
+app.get('*', (req, res) => {
+  // Skip API routes and serve React app
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  } else {
+    res.status(404).json({ error: 'API route not found' });
+  }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -112,10 +195,14 @@ if (USE_SSL && fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH)) {
     const sslOptions = {
       key: fs.readFileSync(SSL_KEY_PATH),
       cert: fs.readFileSync(SSL_CERT_PATH)
-    };    https.createServer(sslOptions, app).listen(PORT, () => {
-      console.log('🔒 HTTPS Server running securely');
+    };
+    
+    https.createServer(sslOptions, app).listen(PORT, () => {
+      console.log(`🔒 HTTPS Server running securely on port ${PORT}`);
       console.log('🛡️  Security features enabled for APDS7311 assignment');
-    });  } catch (sslError) {
+      console.log(`🌐 Server available at: https://localhost:${PORT}`);
+    });
+  } catch (sslError) {
     console.error('SSL configuration error, falling back to HTTP:', sslError.message);
     startHttpServer();
   }
@@ -126,8 +213,9 @@ if (USE_SSL && fs.existsSync(SSL_KEY_PATH) && fs.existsSync(SSL_CERT_PATH)) {
 function startHttpServer() {
   // HTTP Server for Development
   app.listen(PORT, () => {
-    console.log('🚀 HTTP Server running in development mode');
+    console.log(`🚀 HTTP Server running in development mode on port ${PORT}`);
     console.log('🛡️  Security features enabled for APDS7311 assignment');
     console.log('⚠️  Running in development mode - HTTPS disabled');
+    console.log(`🌐 Server available at: http://localhost:${PORT}`);
   });
 }

@@ -33,16 +33,15 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Account number must be 10-12 digits'
     }
-  },
-  username: {
+  },  username: {
     type: String,
     required: true,
     unique: true,
     validate: {
       validator: function(v) {
-        return /^[a-zA-Z0-9_]{3,20}$/.test(v);
+        return /^[a-zA-Z0-9_.]{3,20}$/.test(v);
       },
-      message: 'Username must be alphanumeric with underscores (3-20 characters)'
+      message: 'Username must be alphanumeric with dots and underscores (3-20 characters)'
     }
   },
   password: {

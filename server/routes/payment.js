@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const Payment = require('../models/Payment');
 const AuditTrail = require('../models/AuditTrail');
 
@@ -20,12 +20,11 @@ router.post('/create', auth, async (req, res) => {
     const accountRegex = /^[A-Z0-9]{15,34}$/; // IBAN format
     const swiftRegex = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
     const nameRegex = /^[a-zA-Z\s]{2,50}$/;
-    
-    if (!amountRegex.test(amount)) {
+      if (!amountRegex.test(amount)) {
       await AuditTrail.log({
         userId: req.user.id,
         userModel: 'User',
-        action: 'PAYMENT_CREATED',
+        action: 'PAYMENT_CREATE',
         entityType: 'Payment',
         description: 'Payment creation failed: Invalid amount format',
         ipAddress: clientIp,
@@ -64,13 +63,11 @@ router.post('/create', auth, async (req, res) => {
       payeeName
     });
 
-    await payment.save();
-
-    // Log successful payment creation
+    await payment.save();    // Log successful payment creation
     await AuditTrail.log({
       userId: req.user.id,
       userModel: 'User',
-      action: 'PAYMENT_CREATED',
+      action: 'PAYMENT_CREATE',
       entityType: 'Payment',
       entityId: payment._id,
       description: `Payment created: ${currency} ${amount} to ${payeeName}`,
@@ -173,6 +170,29 @@ router.get('/pending', async (req, res) => {
     }
     
     res.status(500).json({ error: 'Failed to fetch pending payments' });
+  }
+});
+
+// Route aliases for testing compatibility
+router.post('/submit', auth, async (req, res) => {
+  // Use the same logic as create endpoint
+  const createHandler = router.stack.find(layer => layer.route.path === '/create' && layer.route.methods.post);
+  if (createHandler) {
+    return createHandler.route.stack[1].handle(req, res); // Skip auth middleware (already applied)
+  }
+  res.status(404).json({ error: 'Handler not found' });
+});
+
+router.get('/history', auth, async (req, res) => {
+  // Use the same logic as my-payments endpoint
+  try {
+    const payments = await Payment.find({ customerId: req.user.id })
+      .sort({ createdAt: -1 })
+      .select('-__v');
+    res.json(payments);
+  } catch (err) {
+    console.error('Failed to fetch payment history:', err);
+    res.status(500).json({ error: 'Failed to fetch payment history' });
   }
 });
 

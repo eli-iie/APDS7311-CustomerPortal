@@ -32,47 +32,55 @@ const securityHeaders = helmet({
 // Rate Limiting Configuration
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.GLOBAL_RATE_LIMIT || 100,
+  max: process.env.GLOBAL_RATE_LIMIT || 500, // Increased for comprehensive testing
   message: {
     error: 'Too many requests from this IP, please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  trustProxy: false, // Disable X-Forwarded-For header processing for localhost
+  keyGenerator: (req) => req.ip // Use direct IP for localhost development
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.AUTH_RATE_LIMIT || 5,
+  max: process.env.AUTH_RATE_LIMIT || 100, // Significantly increased for testing
   message: {
     error: 'Too many authentication attempts, please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  trustProxy: false,
+  keyGenerator: (req) => req.ip
 });
 
 const paymentLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.PAYMENT_RATE_LIMIT || 10,
+  max: process.env.PAYMENT_RATE_LIMIT || 20, // Increased for testing
   message: {
     error: 'Too many payment requests, please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  trustProxy: false,
+  keyGenerator: (req) => req.ip
 });
 
 const employeeLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.EMPLOYEE_RATE_LIMIT || 3,
+  max: process.env.EMPLOYEE_RATE_LIMIT || 15, // Increased for testing
   message: {
     error: 'Too many employee login attempts, please contact administrator.'
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
+  trustProxy: false,
+  keyGenerator: (req) => req.ip
 });
 
 // CORS Configuration
 const corsMiddleware = cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CORS_ORIGIN || 'https://localhost:3000',
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

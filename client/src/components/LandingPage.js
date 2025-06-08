@@ -88,21 +88,21 @@ const LandingPage = () => {
         <div className="container">
           <div className="access-grid">            <div className="access-card customer-card">
               <h4>Customer Portal</h4>
-              <p>Access your preloaded customer account for international payments</p>
+              <p>Access realistic customer accounts for international payments</p>
               <ul>
-                <li>✓ Preloaded demonstration accounts</li>
+                <li>✓ Realistic demonstration accounts</li>
                 <li>✓ International payment submission</li>
                 <li>✓ Real-time payment tracking</li>
                 <li>✓ Transaction history</li>
               </ul>
               <div className="card-actions">
                 <Link to="/login" className="btn btn-outline">Customer Login</Link>
-              </div>
-              <div className="employee-credentials">
+              </div>              <div className="employee-credentials">
                 <small>
-                  <strong>Demo Accounts:</strong><br/>
-                  test_customer / TestPass123!<br/>
-                  demo_user / DemoPass123!
+                  <strong>Sample Accounts:</strong><br/>
+                  alexandra.mitchell / CustomerSecure2025!<br/>
+                  benjamin.carter / BusinessPass2025!<br/>
+                  catherine.williams / TradeSecure2025!
                 </small>
               </div>
             </div>
@@ -118,12 +118,13 @@ const LandingPage = () => {
               </ul>
               <div className="card-actions">
                 <Link to="/employee/login" className="btn btn-outline">Employee Access</Link>
-              </div>              <div className="employee-credentials">
+              </div>
+              <div className="employee-credentials">
                 <small>
-                  <strong>Demo Accounts:</strong><br/>
-                  john.smith / SecurePass123!<br/>
-                  manager.swift / ManagerPass123!<br/>
-                  admin.user / AdminPass123!
+                  <strong>Sample Accounts:</strong><br/>
+                  sarah.chen / SecureManager2025! (Manager)<br/>
+                  emily.watson / OfficerPass2025! (Employee)<br/>
+                  michael.rodriguez / AdminSecure2025! (Admin)
                 </small>
               </div>
             </div>
