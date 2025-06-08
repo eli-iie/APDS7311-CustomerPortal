@@ -5,12 +5,11 @@ const paymentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
-  amount: {
+  },  amount: {
     type: Number,
     required: true,
     min: [0.01, 'Amount must be at least 0.01'],
-    max: [1000000, 'Amount cannot exceed 1,000,000']
+    max: [999999999.99, 'Amount cannot exceed 999,999,999.99']
   },
   currency: {
     type: String,

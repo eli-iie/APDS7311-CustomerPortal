@@ -175,12 +175,112 @@ router.get('/pending', async (req, res) => {
 
 // Route aliases for testing compatibility
 router.post('/submit', auth, async (req, res) => {
-  // Use the same logic as create endpoint
-  const createHandler = router.stack.find(layer => layer.route.path === '/create' && layer.route.methods.post);
-  if (createHandler) {
-    return createHandler.route.stack[1].handle(req, res); // Skip auth middleware (already applied)
+  try {
+    // Input validation
+    const { amount, currency, provider, payeeAccountNumber, swiftCode, payeeName } = req.body;
+    
+    // Get client IP and user agent for audit trail
+    const clientIp = req.ip || req.connection.remoteAddress || '127.0.0.1';
+    const userAgent = req.get('User-Agent') || 'Unknown';
+    
+    // RegEx validation for secure input
+    const amountRegex = /^\d+(\.\d{1,2})?$/;
+    const currencyRegex = /^[A-Z]{3}$/;
+    const accountRegex = /^[A-Z0-9]{15,34}$/; // IBAN format
+    const swiftRegex = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+    const nameRegex = /^[a-zA-Z\s]{2,50}$/;
+    
+    if (!amountRegex.test(amount)) {
+      await AuditTrail.log({
+        userId: req.user.id,
+        userModel: 'User',
+        action: 'PAYMENT_SUBMIT',
+        entityType: 'Payment',
+        description: 'Payment submission failed: Invalid amount format',
+        ipAddress: clientIp,
+        userAgent: userAgent,
+        severity: 'MEDIUM',
+        success: false,
+        errorMessage: 'Invalid amount format'
+      });
+      return res.status(400).json({ msg: 'Invalid amount format' });
+    }
+    
+    if (!currencyRegex.test(currency)) {
+      return res.status(400).json({ msg: 'Invalid currency format' });
+    }
+    
+    if (!accountRegex.test(payeeAccountNumber)) {
+      return res.status(400).json({ msg: 'Invalid IBAN format' });
+    }
+    
+    if (!swiftRegex.test(swiftCode)) {
+      return res.status(400).json({ msg: 'Invalid SWIFT code format' });
+    }
+
+    if (!nameRegex.test(payeeName)) {
+      return res.status(400).json({ msg: 'Invalid payee name format' });
+    }
+
+    // Create new payment
+    const payment = new Payment({
+      customerId: req.user.id,
+      amount: parseFloat(amount),
+      currency,
+      provider: provider || 'SWIFT',
+      payeeAccountNumber,
+      swiftCode,
+      payeeName
+    });
+
+    await payment.save();
+    
+    // Log successful payment submission
+    await AuditTrail.log({
+      userId: req.user.id,
+      userModel: 'User',
+      action: 'PAYMENT_SUBMIT',
+      entityType: 'Payment',
+      entityId: payment._id,
+      description: `Payment submitted: ${currency} ${amount} to ${payeeName}`,
+      newValues: {
+        amount: payment.amount,
+        currency: payment.currency,
+        payeeName: payment.payeeName,
+        swiftCode: payment.swiftCode
+      },
+      ipAddress: clientIp,
+      userAgent: userAgent,
+      severity: 'LOW'
+    });
+    
+    res.status(201).json({ 
+      message: 'Payment submitted successfully',
+      referenceNumber: payment.referenceNumber.toString().trim()
+    });
+  } catch (err) {
+    console.error('Payment submission error:', err);
+    
+    // Log the error for audit trail
+    try {
+      await AuditTrail.log({
+        userId: req.user?.id || 'unknown',
+        userModel: 'User',
+        action: 'PAYMENT_SUBMISSION_FAILED',
+        entityType: 'Payment',
+        description: `Payment submission failed: ${err.message}`,
+        ipAddress: req.ip || req.connection.remoteAddress || '127.0.0.1',
+        userAgent: req.get('User-Agent') || 'Unknown',
+        severity: 'HIGH',
+        success: false,
+        errorMessage: err.message
+      });
+    } catch (auditErr) {
+      console.error('Failed to log payment submission error:', auditErr);
+    }
+    
+    res.status(500).json({ error: 'Failed to submit payment' });
   }
-  res.status(404).json({ error: 'Handler not found' });
 });
 
 router.get('/history', auth, async (req, res) => {

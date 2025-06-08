@@ -1,7 +1,8 @@
-# Customer Portal Test Runner (Fixed Version)
-# Clean PowerShell script focusing only on PowerShell server functions
+# Customer Portal Integrated Workflow and Security Test Runner
+# Starts server, runs comprehensive workflow tests first, then security tests
 
-Write-Host "Customer Portal Test Runner" -ForegroundColor Cyan
+Write-Host "CUSTOMER PORTAL - INTEGRATED WORKFLOW & SECURITY TEST" -ForegroundColor Cyan
+Write-Host "Comprehensive Workflow -> Security Validation Testing" -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Cyan
 
 # Function to clean up processes
@@ -59,26 +60,78 @@ try {
     Write-Host "Waiting 20 seconds for startup..." -ForegroundColor Gray
     Start-Sleep -Seconds 20
     Write-Host "Server startup wait complete - proceeding with tests" -ForegroundColor Green
-      # Step 5: Run comprehensive tests
-    Write-Host "Running comprehensive workflow tests..." -ForegroundColor Yellow
+    
+    # Step 5: Run COMPREHENSIVE WORKFLOW tests first
+    Write-Host "" -ForegroundColor White
+    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "PHASE 1: COMPREHENSIVE WORKFLOW TESTING" -ForegroundColor Green
+    Write-Host "========================================" -ForegroundColor Green
     
     if (!(Test-Path "comprehensive-workflow-test.js")) {
-        throw "Test script not found: comprehensive-workflow-test.js"
+        throw "Workflow test script not found: comprehensive-workflow-test.js"
     }
     
     & node "comprehensive-workflow-test.js"
-    $testExitCode = $LASTEXITCODE
+    $workflowExitCode = $LASTEXITCODE
     
-    if ($testExitCode -eq 0) {
-        Write-Host "Test execution completed successfully!" -ForegroundColor Green
+    if ($workflowExitCode -eq 0) {
+        Write-Host "Workflow tests completed successfully!" -ForegroundColor Green
     } else {
-        Write-Host "Test execution completed with exit code: $testExitCode" -ForegroundColor Yellow
+        Write-Host "Workflow tests completed with exit code: $workflowExitCode" -ForegroundColor Yellow
+    }
+    
+    # Brief pause between test phases
+    Write-Host "" -ForegroundColor White
+    Write-Host "Brief pause between test phases..." -ForegroundColor Gray
+    Start-Sleep -Seconds 3
+    
+    # Step 6: Run SECURITY tests second
+    Write-Host "" -ForegroundColor White
+    Write-Host "========================================" -ForegroundColor Magenta
+    Write-Host "PHASE 2: ENHANCED SECURITY VALIDATION" -ForegroundColor Magenta
+    Write-Host "========================================" -ForegroundColor Magenta
+    
+    if (!(Test-Path "enhanced-security-test.js")) {
+        throw "Security test script not found: enhanced-security-test.js"
+    }
+    
+    & node "enhanced-security-test.js"
+    $securityExitCode = $LASTEXITCODE
+    
+    if ($securityExitCode -eq 0) {
+        Write-Host "Security tests completed successfully!" -ForegroundColor Green
+    } else {
+        Write-Host "Security tests completed with exit code: $securityExitCode" -ForegroundColor Yellow
+    }
+    
+    # Final summary
+    Write-Host "" -ForegroundColor White
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "COMPLETE TEST SUITE SUMMARY" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    
+    if ($workflowExitCode -eq 0) {
+        Write-Host "Workflow Tests: PASSED" -ForegroundColor Green
+    } else {
+        Write-Host "Workflow Tests: Issues detected (code: $workflowExitCode)" -ForegroundColor Yellow
+    }
+    
+    if ($securityExitCode -eq 0) {
+        Write-Host "Security Tests: PASSED" -ForegroundColor Green
+    } else {
+        Write-Host "Security Tests: Issues detected (code: $securityExitCode)" -ForegroundColor Yellow
+    }
+    
+    if ($workflowExitCode -eq 0 -and $securityExitCode -eq 0) {
+        Write-Host "" -ForegroundColor White
+        Write-Host "ALL TESTS PASSED! Customer Portal fully validated!" -ForegroundColor Green
     }
     
 } catch {
     Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
 } finally {
     # Always clean up
+    Write-Host "" -ForegroundColor White
     Write-Host "Performing cleanup..." -ForegroundColor Yellow
     
     if ($serverProcess -and !$serverProcess.HasExited) {
@@ -90,5 +143,5 @@ try {
 }
 
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Test runner finished at $(Get-Date)" -ForegroundColor Cyan
+Write-Host "Integrated test suite finished at $(Get-Date)" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan

@@ -440,6 +440,402 @@ async function testSecurityFeatures() {
     }
 }
 
+async function testPaymentVerificationWorkflow(customerTokens, employeeTokens) {
+    logSection('🔄 TESTING PAYMENT VERIFICATION WORKFLOW');
+    
+    if (Object.keys(customerTokens).length === 0 || Object.keys(employeeTokens).length === 0) {
+        logTest('Payment Verification Workflow', false, 'Missing customer or employee tokens');
+        return;
+    }
+    
+    const customer = CONFIG.testCustomers[0]; // Alexandra Mitchell
+    const employee = CONFIG.testEmployees[0]; // Sarah Chen (Manager)
+    const manager = CONFIG.testEmployees[0]; // Sarah Chen (Manager)
+    
+    const customerToken = customerTokens[customer.username];
+    const employeeToken = employeeTokens[employee.username];
+    const managerToken = employeeTokens[manager.username];
+    
+    if (!customerToken || !employeeToken || !managerToken) {
+        logTest('Payment Verification Setup', false, 'Missing required tokens');
+        return;
+    }
+    
+    try {
+        logInfo('Testing complete payment verification workflow...');
+        
+        // Step 1: Customer creates a payment for verification
+        const verificationPaymentData = {
+            payeeName: 'Global Trade Partners Ltd',
+            provider: 'SWIFT',
+            payeeAccountNumber: 'DE89370400440532013000', // Valid German IBAN
+            swiftCode: 'DEUTDEFF',
+            amount: '5750.50',
+            currency: 'EUR'
+        };
+        
+        logInfo('Step 1: Customer creates payment for verification test...');
+        const createResponse = await api.post(`${CONFIG.serverUrl}/api/payments/submit`, 
+            verificationPaymentData, {
+                headers: { Authorization: `Bearer ${customerToken}` }
+            });
+        
+        const paymentCreated = createResponse.status === 200 || createResponse.status === 201;
+        logTest('Payment Creation for Verification', paymentCreated, 
+            `Status: ${createResponse.status}, Amount: €${verificationPaymentData.amount}`);
+        
+        if (!paymentCreated) {
+            logTest('Payment Verification Workflow', false, 'Could not create test payment');
+            return;
+        }
+        
+        await delay(1000); // Allow database to update
+        
+        // Step 2: Employee views pending payments
+        logInfo('Step 2: Employee checks pending payments...');
+        const pendingResponse = await api.get(`${CONFIG.serverUrl}/api/employee/payments/pending`, {
+            headers: { Authorization: `Bearer ${employeeToken}` }
+        });
+        
+        const pendingAccess = pendingResponse.status === 200;
+        const pendingCount = pendingResponse.data?.length || 0;
+        logTest('Employee Pending Payments Access', pendingAccess, 
+            `Status: ${pendingResponse.status}, Pending payments: ${pendingCount}`);
+        
+        // Step 3: Employee views specific payment details
+        if (pendingAccess && pendingResponse.data && pendingResponse.data.length > 0) {
+            const testPayment = pendingResponse.data.find(p => 
+                p.payeeName === verificationPaymentData.payeeName && 
+                p.amount === parseFloat(verificationPaymentData.amount)
+            ) || pendingResponse.data[0];
+            
+            logInfo(`Step 3: Employee views payment details for ${testPayment.referenceNumber}...`);
+            const detailResponse = await api.get(`${CONFIG.serverUrl}/api/employee/payments/${testPayment._id}`, {
+                headers: { Authorization: `Bearer ${employeeToken}` }
+            });
+            
+            logTest('Payment Detail Retrieval', detailResponse.status === 200, 
+                `Status: ${detailResponse.status}, Payment ID: ${testPayment._id.substring(0, 8)}...`);
+            
+            // Step 4: Employee verifies the payment
+            logInfo('Step 4: Employee verifies payment...');
+            const verifyResponse = await api.put(`${CONFIG.serverUrl}/api/employee/payments/${testPayment._id}/verify`, {}, {
+                headers: { Authorization: `Bearer ${employeeToken}` }
+            });
+            
+            const verificationSuccess = verifyResponse.status === 200;
+            logTest('Payment Verification by Employee', verificationSuccess, 
+                `Status: ${verifyResponse.status}, Reference: ${testPayment.referenceNumber}`);
+            
+            // Step 5: Manager views verified payments
+            if (verificationSuccess) {
+                await delay(1000);
+                logInfo('Step 5: Manager checks verified payments ready for SWIFT...');
+                const verifiedResponse = await api.get(`${CONFIG.serverUrl}/api/employee/payments/verified`, {
+                    headers: { Authorization: `Bearer ${managerToken}` }
+                });
+                
+                const verifiedAccess = verifiedResponse.status === 200;
+                const verifiedCount = verifiedResponse.data?.length || 0;
+                logTest('Manager Verified Payments Access', verifiedAccess, 
+                    `Status: ${verifiedResponse.status}, Verified payments: ${verifiedCount}`);
+                
+                // Step 6: Manager submits to SWIFT
+                if (verifiedAccess && verifiedResponse.data && verifiedResponse.data.length > 0) {
+                    const verifiedPayment = verifiedResponse.data.find(p => p._id === testPayment._id);
+                    if (verifiedPayment) {
+                        logInfo('Step 6: Manager submits verified payment to SWIFT...');
+                        const swiftResponse = await api.post(`${CONFIG.serverUrl}/api/employee/payments/submit-to-swift`, 
+                            { paymentIds: [verifiedPayment._id] }, {
+                                headers: { Authorization: `Bearer ${managerToken}` }
+                            });
+                        
+                        logTest('SWIFT Submission by Manager', swiftResponse.status === 200, 
+                            `Status: ${swiftResponse.status}, Submitted: ${swiftResponse.data?.submissions?.length || 0} payments`);
+                    }
+                }
+            }
+        }
+        
+        // Step 7: Test payment rejection workflow
+        logInfo('Step 7: Testing payment rejection workflow...');
+        
+        // Create another payment for rejection test
+        const rejectionPaymentData = {
+            payeeName: 'Suspicious Transaction Corp',
+            provider: 'SWIFT',
+            payeeAccountNumber: 'FR1420041010050500013M02606',
+            swiftCode: 'BDFEFRPP',
+            amount: '999.99',
+            currency: 'USD'
+        };
+        
+        const rejectCreateResponse = await api.post(`${CONFIG.serverUrl}/api/payments/submit`, 
+            rejectionPaymentData, {
+                headers: { Authorization: `Bearer ${customerToken}` }
+            });
+        
+        if (rejectCreateResponse.status === 200 || rejectCreateResponse.status === 201) {
+            await delay(1000);
+            
+            // Get the new payment for rejection
+            const newPendingResponse = await api.get(`${CONFIG.serverUrl}/api/employee/payments/pending`, {
+                headers: { Authorization: `Bearer ${employeeToken}` }
+            });
+            
+            if (newPendingResponse.status === 200 && newPendingResponse.data) {
+                const rejectPayment = newPendingResponse.data.find(p => 
+                    p.payeeName === rejectionPaymentData.payeeName
+                ) || newPendingResponse.data[0];
+                
+                if (rejectPayment) {
+                    const rejectionReason = 'Payment details require additional verification due to compliance requirements.';
+                    const rejectResponse = await api.put(`${CONFIG.serverUrl}/api/employee/payments/${rejectPayment._id}/reject`, 
+                        { rejectionReason }, {
+                            headers: { Authorization: `Bearer ${employeeToken}` }
+                        });
+                    
+                    logTest('Payment Rejection by Employee', rejectResponse.status === 200, 
+                        `Status: ${rejectResponse.status}, Reason: ${rejectionReason.substring(0, 50)}...`);
+                }
+            }
+        }
+        
+    } catch (error) {
+        logTest('Payment Verification Workflow', false, `Error: ${error.message}`);
+    }
+}
+
+async function testRoleBasedAccessControl(employeeTokens) {
+    logSection('🔐 TESTING ROLE-BASED ACCESS CONTROL');
+    
+    if (Object.keys(employeeTokens).length === 0) {
+        logTest('Role-Based Access Control', false, 'No employee tokens available');
+        return;
+    }
+    
+    try {
+        // Test different role permissions
+        for (const employee of CONFIG.testEmployees) {
+            const token = employeeTokens[employee.username];
+            if (!token) continue;
+            
+            logInfo(`Testing ${employee.role} permissions for ${employee.fullName}...`);
+            
+            // Test verified payments access (Manager/Admin only)
+            const verifiedResponse = await api.get(`${CONFIG.serverUrl}/api/employee/payments/verified`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const shouldHaveAccess = employee.role === 'manager' || employee.role === 'admin';
+            const hasAccess = verifiedResponse.status === 200;
+            const accessCorrect = shouldHaveAccess === hasAccess;
+            
+            logTest(`Verified Payments Access (${employee.role})`, accessCorrect, 
+                `Status: ${verifiedResponse.status}, Expected: ${shouldHaveAccess ? 'Allow' : 'Deny'}, Got: ${hasAccess ? 'Allow' : 'Deny'}`);
+            
+            // Test SWIFT submission access (Manager/Admin only)
+            const swiftResponse = await api.post(`${CONFIG.serverUrl}/api/employee/payments/submit-to-swift`, 
+                { paymentIds: [] }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            
+            const swiftShouldWork = employee.role === 'manager' || employee.role === 'admin';
+            const swiftAccessCorrect = swiftShouldWork ? 
+                (swiftResponse.status === 200 || swiftResponse.status === 400) : // 400 for empty array is acceptable
+                (swiftResponse.status === 403); // Should be forbidden for employees
+            
+            logTest(`SWIFT Submission Access (${employee.role})`, swiftAccessCorrect, 
+                `Status: ${swiftResponse.status}, Role: ${employee.role}`);
+            
+            // Test audit trail access (Admin only)
+            const auditResponse = await api.get(`${CONFIG.serverUrl}/api/employee/audit-trail`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const auditShouldWork = employee.role === 'admin';
+            const auditAccessCorrect = auditShouldWork ? 
+                (auditResponse.status === 200) : 
+                (auditResponse.status === 403);
+            
+            logTest(`Audit Trail Access (${employee.role})`, auditAccessCorrect, 
+                `Status: ${auditResponse.status}, Role: ${employee.role}`);
+        }
+        
+    } catch (error) {
+        logTest('Role-Based Access Control', false, `Error: ${error.message}`);
+    }
+}
+
+async function testAuditTrailFunctionality(employeeTokens) {
+    logSection('📋 TESTING AUDIT TRAIL FUNCTIONALITY');
+    
+    const adminEmployee = CONFIG.testEmployees.find(emp => emp.role === 'admin');
+    if (!adminEmployee) {
+        logTest('Audit Trail Testing', false, 'No admin employee found');
+        return;
+    }
+    
+    const adminToken = employeeTokens[adminEmployee.username];
+    if (!adminToken) {
+        logTest('Audit Trail Testing', false, 'No admin token available');
+        return;
+    }
+    
+    try {
+        logInfo('Testing audit trail access and pagination...');
+        
+        // Test audit trail access
+        const auditResponse = await api.get(`${CONFIG.serverUrl}/api/employee/audit-trail`, {
+            headers: { Authorization: `Bearer ${adminToken}` }
+        });
+        
+        logTest('Audit Trail Access', auditResponse.status === 200, 
+            `Status: ${auditResponse.status}, Entries: ${auditResponse.data?.auditEntries?.length || 0}`);
+        
+        // Test audit trail pagination
+        const paginatedResponse = await api.get(`${CONFIG.serverUrl}/api/employee/audit-trail?page=1&limit=5`, {
+            headers: { Authorization: `Bearer ${adminToken}` }
+        });
+        
+        const hasPagination = paginatedResponse.status === 200 && 
+                             paginatedResponse.data?.pagination;
+        
+        logTest('Audit Trail Pagination', hasPagination, 
+            `Status: ${paginatedResponse.status}, Pagination: ${hasPagination ? 'Yes' : 'No'}`);
+        
+        // Verify audit trail contains expected action types
+        if (auditResponse.status === 200 && auditResponse.data?.auditEntries) {
+            const entries = auditResponse.data.auditEntries;
+            const actionTypes = [...new Set(entries.map(entry => entry.action))];
+            
+            const expectedActions = ['LOGIN_SUCCESS', 'VIEW_PENDING_PAYMENTS', 'VERIFY_PAYMENT', 'REJECT_PAYMENT'];
+            const foundActions = expectedActions.filter(action => actionTypes.includes(action));
+            
+            logTest('Audit Trail Action Types', foundActions.length > 0, 
+                `Found actions: ${foundActions.join(', ')} (${foundActions.length}/${expectedActions.length})`);
+        }
+        
+    } catch (error) {
+        logTest('Audit Trail Functionality', false, `Error: ${error.message}`);
+    }
+}
+
+async function testPaymentValidationEnhancements(customerTokens) {
+    logSection('🛡️ TESTING ENHANCED PAYMENT VALIDATION');
+    
+    if (Object.keys(customerTokens).length === 0) {
+        logTest('Payment Validation', false, 'No customer tokens available');
+        return;
+    }
+    
+    const customer = CONFIG.testCustomers[1]; // Benjamin Carter
+    const token = customerTokens[customer.username];
+    
+    if (!token) {
+        logTest('Payment Validation Setup', false, 'No token for test customer');
+        return;
+    }
+    
+    try {
+        logInfo('Testing payment validation edge cases...');
+        
+        // Test 1: Invalid SWIFT code format
+        const invalidSwiftData = {
+            payeeName: 'Test Corporation',
+            provider: 'SWIFT',
+            payeeAccountNumber: 'GB29NWBK60161331926819',
+            swiftCode: 'INVALID', // Invalid format
+            amount: '100.00',
+            currency: 'USD'
+        };
+        
+        const invalidSwiftResponse = await api.post(`${CONFIG.serverUrl}/api/payments/submit`, 
+            invalidSwiftData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        
+        logTest('Invalid SWIFT Code Rejection', invalidSwiftResponse.status === 400, 
+            `Status: ${invalidSwiftResponse.status}, Should reject invalid SWIFT format`);
+        
+        // Test 2: Invalid IBAN format
+        const invalidIbanData = {
+            payeeName: 'Test Corporation',
+            provider: 'SWIFT',
+            payeeAccountNumber: '123', // Too short for IBAN
+            swiftCode: 'GLBLUS33',
+            amount: '100.00',
+            currency: 'USD'
+        };
+        
+        const invalidIbanResponse = await api.post(`${CONFIG.serverUrl}/api/payments/submit`, 
+            invalidIbanData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        
+        logTest('Invalid IBAN Rejection', invalidIbanResponse.status === 400, 
+            `Status: ${invalidIbanResponse.status}, Should reject invalid IBAN format`);
+        
+        // Test 3: Invalid amount format
+        const invalidAmountData = {
+            payeeName: 'Test Corporation',
+            provider: 'SWIFT',
+            payeeAccountNumber: 'GB29NWBK60161331926819',
+            swiftCode: 'GLBLUS33',
+            amount: 'not-a-number', // Invalid amount
+            currency: 'USD'
+        };
+        
+        const invalidAmountResponse = await api.post(`${CONFIG.serverUrl}/api/payments/submit`, 
+            invalidAmountData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        
+        logTest('Invalid Amount Rejection', invalidAmountResponse.status === 400, 
+            `Status: ${invalidAmountResponse.status}, Should reject invalid amount format`);
+        
+        // Test 4: SQL injection attempt in payee name
+        const sqlInjectionData = {
+            payeeName: "'; DROP TABLE payments; --",
+            provider: 'SWIFT',
+            payeeAccountNumber: 'GB29NWBK60161331926819',
+            swiftCode: 'GLBLUS33',
+            amount: '100.00',
+            currency: 'USD'
+        };
+        
+        const sqlInjectionResponse = await api.post(`${CONFIG.serverUrl}/api/payments/submit`, 
+            sqlInjectionData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        
+        logTest('SQL Injection Prevention', sqlInjectionResponse.status === 400, 
+            `Status: ${sqlInjectionResponse.status}, Should reject malicious payee name`);
+        
+        // Test 5: Very large amount
+        const largeAmountData = {
+            payeeName: 'Test Corporation',
+            provider: 'SWIFT',
+            payeeAccountNumber: 'GB29NWBK60161331926819',
+            swiftCode: 'GLBLUS33',
+            amount: '999999999.99', // Very large amount
+            currency: 'USD'
+        };
+        
+        const largeAmountResponse = await api.post(`${CONFIG.serverUrl}/api/payments/submit`, 
+            largeAmountData, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+        
+        // This might be accepted or rejected depending on business rules
+        logTest('Large Amount Handling', largeAmountResponse.status !== 500, 
+            `Status: ${largeAmountResponse.status}, System handles large amounts gracefully`);
+        
+    } catch (error) {
+        logTest('Payment Validation Enhancements', false, `Error: ${error.message}`);
+    }
+}
+
 // Main Test Runner
 async function runComprehensiveWorkflowTest() {
     colorLog('\n🚀 COMPREHENSIVE WORKFLOW TEST - CUSTOMER PORTAL', 'bright');
@@ -474,6 +870,19 @@ async function runComprehensiveWorkflowTest() {
             
             await delay(1500);
             await testSecurityFeatures();
+            
+            // NEW ENHANCED TESTS
+            await delay(2000);
+            await testPaymentVerificationWorkflow(customerTokens, employeeTokens);
+            
+            await delay(2000);
+            await testRoleBasedAccessControl(employeeTokens);
+            
+            await delay(2000);
+            await testAuditTrailFunctionality(employeeTokens);
+            
+            await delay(2000);
+            await testPaymentValidationEnhancements(customerTokens);
         } else {
             colorLog('❌ Server not responding - skipping functional tests', 'red');
         }
@@ -496,8 +905,12 @@ async function runComprehensiveWorkflowTest() {
         'Connectivity': testStats.results.filter(r => r.test.includes('Connectivity')),
         'Customer Auth': testStats.results.filter(r => r.test.includes('Customer') && r.test.includes('Login')),
         'Employee Auth': testStats.results.filter(r => r.test.includes('Employee') && r.test.includes('Login')),
-        'Payment Flow': testStats.results.filter(r => r.test.includes('Payment')),
-        'Security': testStats.results.filter(r => r.test.includes('Security') || r.test.includes('Invalid') || r.test.includes('Unauthorized'))
+        'Payment Flow': testStats.results.filter(r => r.test.includes('Payment') && !r.test.includes('Verification') && !r.test.includes('Validation')),
+        'Payment Verification': testStats.results.filter(r => r.test.includes('Verification') || r.test.includes('Reject') || r.test.includes('SWIFT')),
+        'Role Access Control': testStats.results.filter(r => r.test.includes('Access') && (r.test.includes('Manager') || r.test.includes('Admin') || r.test.includes('Employee'))),
+        'Audit Trail': testStats.results.filter(r => r.test.includes('Audit')),
+        'Validation': testStats.results.filter(r => r.test.includes('Validation') || r.test.includes('Invalid') || r.test.includes('Rejection')),
+        'Security': testStats.results.filter(r => r.test.includes('Security') || r.test.includes('Unauthorized') || r.test.includes('Prevention'))
     };
     
     console.log('\n📋 RESULTS BY CATEGORY:');
