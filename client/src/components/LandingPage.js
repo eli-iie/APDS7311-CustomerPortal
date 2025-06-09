@@ -5,49 +5,100 @@ import './LandingPage.css';
 
 const LandingPage = () => {
   return (
-    <div className="landing-container">
-      {/* Header */}
-      <header className="landing-header">
-        <div className="container">
-          <div className="header-content">
-            <div className="logo">
-              <h1>🏦 SecureBank</h1>
-              <span>International Payments Portal</span>
-            </div>            <nav className="nav-links">
-              <Link to="/login" className="nav-link">Customer Login</Link>
-              <Link to="/employee/login" className="nav-link employee-link">Employee Portal</Link>
-            </nav>
+    <div className="landing-page">
+      {/* Navigation */}
+      <nav className="navbar">
+        <div className="nav-container">
+          <div className="nav-brand">
+            <span className="brand-icon">🏦</span>
+            <span className="brand-text">SecureBank</span>
+          </div>
+          <div className="nav-links">
+            <Link to="/login" className="nav-btn primary">Customer Login</Link>
+            <Link to="/employee/login" className="nav-btn secondary">Employee Portal</Link>
           </div>
         </div>
-      </header>
+      </nav>
 
       {/* Hero Section */}
-      <section className="hero">
-        <div className="container">
+      <section className="hero-section">
+        <div className="hero-container">
           <div className="hero-content">
-            <div className="hero-text">
-              <h2>Secure International Payments</h2>
-              <p className="hero-subtitle">
-                Professional banking portal for secure international money transfers via SWIFT network
-              </p>
-              <p className="hero-description">
-                Experience enterprise-grade security with bcrypt password hashing, input validation, 
-                SSL encryption, and comprehensive attack prevention measures.
-              </p>              <div className="hero-actions">
-                <Link to="/login" className="btn btn-primary">
-                  Customer Portal Login
-                </Link>
-                <Link to="/employee/login" className="btn btn-secondary">
-                  Employee Portal Access
-                </Link>
+            <h1 className="hero-title">
+              Secure International<br />
+              <span className="gradient-text">Payment Portal</span>
+            </h1>
+            <p className="hero-description">
+              Professional banking system with enterprise-grade security, 
+              SWIFT integration, and comprehensive payment processing capabilities.
+            </p>
+            <div className="hero-buttons">
+              <Link to="/login" className="hero-btn primary">
+                <span>Access Customer Portal</span>
+                <span className="btn-icon">→</span>
+              </Link>
+              <Link to="/employee/login" className="hero-btn outline">
+                <span>Employee Login</span>
+                <span className="btn-icon">🔒</span>
+              </Link>
+            </div>          </div>
+          <div className="hero-visual">
+            <div className="security-dashboard">
+              <div className="dashboard-header">
+                <div className="status-indicator">
+                  <span className="pulse-dot"></span>
+                  <span className="status-text">System Operational</span>
+                </div>
+                <div className="security-level">
+                  <span className="level-badge">Enterprise Grade</span>
+                </div>
               </div>
-            </div>
-            <div className="hero-image">
-              <div className="security-badge">
-                <div className="badge-icon">🔒</div>
-                <div className="badge-text">
-                  <strong>Bank-Grade Security</strong>
-                  <span>SSL • bcrypt • Input Validation</span>
+              
+              <div className="security-metrics">
+                <div className="metric-card">
+                  <div className="metric-icon">🔐</div>
+                  <div className="metric-info">
+                    <span className="metric-value">256-bit</span>
+                    <span className="metric-label">SSL Encryption</span>
+                  </div>
+                  <div className="metric-status active"></div>
+                </div>
+                
+                <div className="metric-card">
+                  <div className="metric-icon">🔑</div>
+                  <div className="metric-info">
+                    <span className="metric-value">bcrypt</span>
+                    <span className="metric-label">Password Hashing</span>
+                  </div>
+                  <div className="metric-status active"></div>
+                </div>
+                
+                <div className="metric-card">
+                  <div className="metric-icon">🌐</div>
+                  <div className="metric-info">
+                    <span className="metric-value">SWIFT</span>
+                    <span className="metric-label">Network Integration</span>
+                  </div>
+                  <div className="metric-status active"></div>
+                </div>
+                
+                <div className="metric-card">
+                  <div className="metric-icon">🛡️</div>
+                  <div className="metric-info">
+                    <span className="metric-value">Active</span>
+                    <span className="metric-label">Input Validation</span>
+                  </div>
+                  <div className="metric-status active"></div>
+                </div>
+              </div>
+              
+              <div className="dashboard-footer">
+                <div className="uptime-display">
+                  <span className="uptime-label">Uptime:</span>
+                  <span className="uptime-value">99.9%</span>
+                </div>
+                <div className="last-updated">
+                  <span>Last updated: Just now</span>
                 </div>
               </div>
             </div>
@@ -56,141 +107,112 @@ const LandingPage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="features">
-        <div className="container">
-          <h3>Why Choose SecureBank?</h3>
+      <section className="features-section">
+        <div className="features-container">
+          <h2 className="section-title">Why Choose SecureBank?</h2>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">🛡️</div>
-              <h4>Advanced Security</h4>
-              <p>Multi-layered security with bcrypt hashing, input validation, and attack prevention</p>
+              <div className="feature-icon">🔐</div>
+              <h3>Bank-Grade Security</h3>
+              <p>Advanced encryption, secure authentication, and comprehensive audit trails</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">🌐</div>
-              <h4>SWIFT Network</h4>
-              <p>Direct integration with SWIFT for reliable international money transfers</p>
+              <h3>SWIFT Integration</h3>
+              <p>Direct connection to international payment networks for reliable transfers</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">⚡</div>
-              <h4>Fast Processing</h4>
-              <p>Employee verification system ensures quick and accurate payment processing</p>
+              <h3>Fast Processing</h3>
+              <p>Streamlined workflow with real-time verification and instant notifications</p>
             </div>
             <div className="feature-card">
               <div className="feature-icon">📊</div>
-              <h4>Audit Trail</h4>
-              <p>Complete transaction history and audit logging for regulatory compliance</p>
+              <h3>Complete Audit Trail</h3>
+              <p>Full transaction logging and compliance reporting for regulatory requirements</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Portal Access Section */}
-      <section className="portal-access">
-        <div className="container">
-          <div className="access-grid">            <div className="access-card customer-card">
-              <h4>Customer Portal</h4>
-              <p>Access realistic customer accounts for international payments</p>
-              <ul>
-                <li>✓ Realistic demonstration accounts</li>
-                <li>✓ International payment submission</li>
-                <li>✓ Real-time payment tracking</li>
-                <li>✓ Transaction history</li>
+      {/* Portal Cards Section */}
+      <section className="portals-section">
+        <div className="portals-container">
+          <h2 className="section-title">Choose Your Portal</h2>
+          <div className="portals-grid">
+            <div className="portal-card customer">
+              <div className="card-icon">👤</div>
+              <h3>Customer Portal</h3>
+              <p>Manage your international payments with our secure customer interface</p>
+              <ul className="feature-list">
+                <li>International money transfers</li>
+                <li>Real-time payment tracking</li>
+                <li>Transaction history</li>
+                <li>Account management</li>
               </ul>
-              <div className="card-actions">
-                <Link to="/login" className="btn btn-outline">Customer Login</Link>
-              </div>              <div className="employee-credentials">
-                <small>
-                  <strong>Sample Accounts:</strong><br/>
-                  alexandra.mitchell / CustomerSecure2025!<br/>
-                  benjamin.carter / BusinessPass2025!<br/>
-                  catherine.williams / TradeSecure2025!
-                </small>
-              </div>
+              <Link to="/login" className="portal-btn">Access Customer Portal</Link>
             </div>
-            
-            <div className="access-card employee-card">
-              <h4>Employee Portal</h4>
-              <p>Bank staff verification and processing system</p>
-              <ul>
-                <li>✓ Payment verification dashboard</li>
-                <li>✓ SWIFT code validation</li>
-                <li>✓ Bulk payment processing</li>
-                <li>✓ Audit trail management</li>
+            <div className="portal-card employee">
+              <div className="card-icon">👥</div>
+              <h3>Employee Portal</h3>
+              <p>Staff interface for payment verification and system administration</p>
+              <ul className="feature-list">
+                <li>Payment verification dashboard</li>
+                <li>SWIFT code validation</li>
+                <li>Bulk processing tools</li>
+                <li>Audit management</li>
               </ul>
-              <div className="card-actions">
-                <Link to="/employee/login" className="btn btn-outline">Employee Access</Link>
-              </div>
-              <div className="employee-credentials">
-                <small>
-                  <strong>Sample Accounts:</strong><br/>
-                  sarah.chen / SecureManager2025! (Manager)<br/>
-                  emily.watson / OfficerPass2025! (Employee)<br/>
-                  michael.rodriguez / AdminSecure2025! (Admin)
-                </small>
-              </div>
+              <Link to="/employee/login" className="portal-btn">Employee Access</Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Security Info Section */}
-      <section className="security-info">
-        <div className="container">
-          <h3>Enterprise Security Features</h3>
-          <div className="security-grid">
-            <div className="security-item">
-              <strong>Password Security</strong>
-              <span>bcrypt hashing with 12+ salt rounds</span>
+      {/* Demo Notice */}
+      <section className="demo-section">
+        <div className="demo-container">
+          <div className="demo-card">
+            <div className="demo-header">
+              <span className="demo-icon">🎓</span>
+              <h3>Educational Demo Platform</h3>
             </div>
-            <div className="security-item">
-              <strong>Input Validation</strong>
-              <span>RegEx patterns prevent injection attacks</span>
-            </div>
-            <div className="security-item">
-              <strong>SSL/HTTPS</strong>
-              <span>End-to-end encryption for all data</span>
-            </div>
-            <div className="security-item">
-              <strong>Session Security</strong>
-              <span>Secure tokens with auto-expiration</span>
-            </div>
-            <div className="security-item">
-              <strong>Rate Limiting</strong>
-              <span>DDoS protection and abuse prevention</span>
-            </div>
-            <div className="security-item">
-              <strong>Audit Logging</strong>
-              <span>Complete activity tracking and monitoring</span>
+            <p>
+              This is a secure banking demonstration system developed for APDS7311. 
+              Features realistic accounts and transactions for educational purposes.
+            </p>
+            <div className="demo-badges">
+              <span className="badge">Realistic Demo Data</span>
+              <span className="badge">Full Security Implementation</span>
+              <span className="badge">SWIFT Integration</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="landing-footer">
-        <div className="container">
+      <footer className="footer">
+        <div className="footer-container">
           <div className="footer-content">
             <div className="footer-section">
               <h4>SecureBank Portal</h4>
               <p>APDS7311 - Application Development Security</p>
-              <p>International Payments Processing System</p>
+              <p>International Payment Processing System</p>
             </div>
             <div className="footer-section">
-              <h4>Security Compliance</h4>
-              <p>✓ PCI DSS Compliant</p>
-              <p>✓ GDPR Compliant</p>
-              <p>✓ SWIFT Standards</p>
+              <h4>Security Standards</h4>
+              <p>PCI DSS Compliant</p>
+              <p>GDPR Compliant</p>
+              <p>SWIFT Certified</p>
             </div>
             <div className="footer-section">
               <h4>System Status</h4>
-              <p>🟢 All Systems Operational</p>
-              <p>🔒 Security: Active</p>
-              <p>📡 SWIFT: Connected</p>
+              <p><span className="status-indicator">🟢</span> All Systems Operational</p>
+              <p><span className="status-indicator">🔒</span> Security Active</p>
+              <p><span className="status-indicator">📡</span> SWIFT Connected</p>
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2025 SecureBank International Payments Portal. All rights reserved.</p>
-            <p>Developed for APDS7311 Assignment - Secure Banking Application</p>
+            <p>&copy; 2025 SecureBank International. Educational Demo Platform.</p>
           </div>
         </div>
       </footer>

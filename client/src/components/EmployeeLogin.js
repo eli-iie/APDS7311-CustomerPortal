@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
 const EmployeeLogin = () => {
@@ -84,13 +84,12 @@ const EmployeeLogin = () => {
       setLoading(false);
     }
   };
-
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="employee-header">
+        <div className="auth-header">
           <h2>🏦 Employee Portal</h2>
-          <p>International Payments Verification System</p>
+          <p className="auth-subtitle">Access the employee verification system</p>
         </div>
         
         {error && <div className="alert alert-danger">{error}</div>}
@@ -124,27 +123,14 @@ const EmployeeLogin = () => {
           </div>
             <button type="submit" disabled={loading} className="employee-login-btn">
             {loading ? 'Logging in...' : 'Access Employee Portal'}
-          </button>
-        </form>
+          </button>        </form>
         
-        <div className="security-notice">
-          <div className="security-info">
-            <h4>🔒 Secure Access Portal</h4>
-            <p>This portal is protected by:</p>
-            <ul>
-              <li>SSL/TLS Encryption</li>
-              <li>Multi-factor Authentication</li>
-              <li>Rate Limiting Protection</li>
-              <li>Comprehensive Audit Logging</li>
-            </ul>
-            <p className="security-warning">
-              ⚠️ Unauthorized access attempts are monitored and logged.
-            </p>
+        <div className="auth-footer">
+          <p>Need technical assistance? Contact IT support for help.</p>
+          <p><Link to="/" className="auth-link">← Back to Home</Link></p>
+          <div className="portal-switch">
+            <p>Are you a customer? <Link to="/login" className="auth-link">Customer Portal</Link></p>
           </div>
-        </div>
-        
-        <div className="portal-switch">
-          <p>Are you a customer? <a href="/login">Customer Portal</a></p>
         </div>
       </div>
     </div>

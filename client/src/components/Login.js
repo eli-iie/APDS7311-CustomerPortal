@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import axios from '../api/axiosConfig';
 import { useNavigate, Link } from 'react-router-dom';
@@ -11,26 +10,34 @@ const Login = () => {
     accountNumber: '',
     password: ''
   });
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState('');
-
-  // Helper function to provide user-friendly error messages
-  const getUserFriendlyErrorMessage = (error) => {
-    if (!error.response) {
+  const [success, setSuccess] = useState('');  // Helper function to provide user-friendly error messages
+  const getUserFriendlyErrorMessage = (err) => {
+    if (!err.response) {
       return 'Unable to connect to server. Please check your internet connection and try again.';
     }
 
-    const status = error.response.status;
-    const serverMessage = error.response.data?.message || error.response.data?.msg || '';
+    const status = err.response.status;
+    const serverMessage = err.response.data?.message || err.response.data?.msg || '';
+    const validationErrors = err.response.data?.errors;
+
+    // Handle validation errors with specific details
+    if (status === 400 && validationErrors && Array.isArray(validationErrors)) {
+      const errorMessages = validationErrors.map(error => error.msg || error.message).join('. ');
+      return errorMessages || 'Please check your input and try again.';
+    }
 
     switch (status) {
       case 400:
-        if (serverMessage.includes('Invalid username format')) {
-          return 'Please enter a valid account number (10-12 digits only).';
-        }
         if (serverMessage.includes('Invalid credentials')) {
           return 'Account number or password is incorrect. Please double-check your credentials.';
+        }
+        if (serverMessage.includes('Account number or username is required')) {
+          return 'Please enter your account number.';
+        }
+        if (serverMessage.includes('Validation error')) {
+          return 'Please check your account number format (10-12 digits) and password.';
         }
         return serverMessage || 'Invalid account number or password. Please verify your credentials.';
       
@@ -45,8 +52,8 @@ const Login = () => {
         
       default:
         return serverMessage || 'Login failed. Please check your credentials and try again.';
-    }  };
-
+    }
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -54,67 +61,70 @@ const Login = () => {
       [name]: value
     }));
     
-    // Clear specific field error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
     }
   };
-  const validateForm = () => {
-    const newErrors = {};
 
+  const validateForm = () => {
     // Account Number validation
     if (!formData.accountNumber.trim()) {
-      newErrors.accountNumber = 'Account number is required';
+      setError('Account number is required');
+      return false;
     } else if (!/^[0-9]{10,12}$/.test(formData.accountNumber.trim())) {
-      newErrors.accountNumber = 'Account number must be 10-12 digits';
+      setError('Account number must be 10-12 digits');
+      return false;
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      setError('Password is required');
+      return false;
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      setError('Password must be at least 6 characters');
+      return false;
     }
 
-    return newErrors;
+    return true;
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Clear previous errors and success messages
-    setErrors({});
+    setError('');
     setSuccess('');
     
     // Validate form
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
 
-    try {      const loginData = {
+    try {
+      const loginData = {
         accountNumber: formData.accountNumber.trim(),
         password: formData.password
-      };
+      };      console.log('Attempting login with data:', { accountNumber: loginData.accountNumber });
 
-      const response = await axios.post('/api/auth/login', loginData);
+      const response = await axios.post('/auth/login', loginData);
+      
+      console.log('Login successful:', response.data);
       
       // Store token and redirect
       localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
       setSuccess('Login successful! Redirecting to dashboard...');
       
       // Redirect after a short delay
       setTimeout(() => {
         navigate('/dashboard');
-      }, 1500);    } catch (error) {
-      const errorMessage = getUserFriendlyErrorMessage(error);
-      setErrors({ general: errorMessage });
+      }, 1500);
+    } catch (err) {
+      console.error('Login error:', err);
+      const errorMessage = getUserFriendlyErrorMessage(err);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -122,13 +132,13 @@ const Login = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h2>Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to your secure banking portal</p>
+          <h2>🏦 Customer Portal</h2>
+          <p className="auth-subtitle">Sign in to your secure banking account</p>
         </div>
         
-        {errors.general && (
+        {error && (
           <div className="alert alert-danger">
-            {errors.general}
+            {error}
           </div>
         )}
         
@@ -147,12 +157,12 @@ const Login = () => {
               name="accountNumber"
               value={formData.accountNumber}
               onChange={handleChange}
-              className={errors.accountNumber ? 'error' : ''}
               placeholder="Enter your 10-12 digit account number"
               maxLength="12"
               disabled={isLoading}
+              required
             />
-            {errors.accountNumber && <small className="error-text">{errors.accountNumber}</small>}
+            <small>Enter your bank account number (10-12 digits)</small>
           </div>
           
           <div className="form-group">
@@ -163,11 +173,10 @@ const Login = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              className={errors.password ? 'error' : ''}
               placeholder="Enter your password"
               disabled={isLoading}
+              required
             />
-            {errors.password && <small className="error-text">{errors.password}</small>}
           </div>
           
           <button type="submit" disabled={isLoading} className="auth-button">
@@ -177,15 +186,46 @@ const Login = () => {
                 Signing In...
               </>
             ) : (
-              'Sign In'
+              'Sign In to Account'
             )}
-          </button>
-        </form>
-          <div className="auth-footer">
-          <p>Need help accessing your account? Contact support for assistance.</p>
+          </button>        </form>
+        
+        <div className="auth-footer">
+          <p>Need help accessing your account? Contact customer support at 1-800-BANK-HELP</p>
           <p><Link to="/" className="auth-link">← Back to Home</Link></p>
+          <div className="portal-switch">
+            <p>Bank employee? <Link to="/employee/login" className="auth-link">Employee Portal</Link></p>
+          </div>
         </div>
       </div>
+      
+      <footer className="auth-page-footer">
+        <div className="container">
+          <div className="footer-content">
+            <div className="footer-section">
+              <h4>SecureBank Portal</h4>
+              <p>Customer Banking Portal</p>
+              <p>International Payments System</p>
+            </div>
+            <div className="footer-section">
+              <h4>Security Compliance</h4>
+              <p>✓ 256-bit SSL Encryption</p>
+              <p>✓ Account Protection</p>
+              <p>✓ Fraud Prevention</p>
+            </div>
+            <div className="footer-section">
+              <h4>Support</h4>
+              <p>📞 1-800-BANK-HELP</p>
+              <p>🔒 Security: Active</p>
+              <p>🟢 System: Operational</p>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <p>&copy; 2025 SecureBank International Payments Portal. All rights reserved.</p>
+            <p>Never share your login credentials with anyone.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
