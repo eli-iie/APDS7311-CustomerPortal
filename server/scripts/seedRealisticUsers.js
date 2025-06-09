@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const { employees, customers } = require('../tests/seed-data');
 require('dotenv').config();
 
 const seedRealisticUsers = async () => {
@@ -141,7 +142,8 @@ const seedRealisticUsers = async () => {
         idNumber: '9105127800086',
         accountNumber: '4006666777',
         username: 'grace.chen',
-        password: 'ExporterSecure2025!'
+        password: '
+        '
       },
       {
         fullName: 'Henry Wilson',

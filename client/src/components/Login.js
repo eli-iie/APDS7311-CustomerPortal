@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import axios from '../api/axiosConfig';
 import { useNavigate, Link } from 'react-router-dom';
@@ -5,8 +6,9 @@ import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-    username: '',
+  
+  const [formData, setFormData] = useState({
+    accountNumber: '',
     password: ''
   });
   const [errors, setErrors] = useState({});
@@ -23,13 +25,14 @@ const Login = () => {
     const serverMessage = error.response.data?.message || error.response.data?.msg || '';
 
     switch (status) {
-      case 400:        if (serverMessage.includes('Invalid username format')) {
-          return 'Please enter a valid username (3-20 characters, letters, numbers, dots, and underscores only).';
+      case 400:
+        if (serverMessage.includes('Invalid username format')) {
+          return 'Please enter a valid account number (10-12 digits only).';
         }
         if (serverMessage.includes('Invalid credentials')) {
-          return 'Username or password is incorrect. Please double-check your credentials.';
+          return 'Account number or password is incorrect. Please double-check your credentials.';
         }
-        return serverMessage || 'Invalid username or password. Please verify your credentials.';
+        return serverMessage || 'Invalid account number or password. Please verify your credentials.';
       
       case 423:
         return 'Your account has been temporarily locked due to multiple failed login attempts. Please wait 30 minutes before trying again, or contact customer support for immediate assistance.';
@@ -50,21 +53,23 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
-      // Clear specific field error when user starts typing
+    
+    // Clear specific field error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
         [name]: ''
       }));
     }
-  };  const validateForm = () => {
+  };
+  const validateForm = () => {
     const newErrors = {};
 
-    // Username validation
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (!/^[a-zA-Z0-9_.]{3,20}$/.test(formData.username.trim())) {
-      newErrors.username = 'Username must be 3-20 characters (letters, numbers, dots, underscores only)';
+    // Account Number validation
+    if (!formData.accountNumber.trim()) {
+      newErrors.accountNumber = 'Account number is required';
+    } else if (!/^[0-9]{10,12}$/.test(formData.accountNumber.trim())) {
+      newErrors.accountNumber = 'Account number must be 10-12 digits';
     }
 
     // Password validation
@@ -94,7 +99,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {      const loginData = {
-        username: formData.username.trim(),
+        accountNumber: formData.accountNumber.trim(),
         password: formData.password
       };
 
@@ -133,20 +138,21 @@ const Login = () => {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="auth-form">          <div className="form-group">
-            <label htmlFor="username">Username</label>
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label htmlFor="accountNumber">Account Number</label>
             <input
               type="text"
-              id="username"
-              name="username"
-              value={formData.username}
+              id="accountNumber"
+              name="accountNumber"
+              value={formData.accountNumber}
               onChange={handleChange}
-              className={errors.username ? 'error' : ''}
-              placeholder="Enter your username (e.g., john.doe)"
-              maxLength="20"
+              className={errors.accountNumber ? 'error' : ''}
+              placeholder="Enter your 10-12 digit account number"
+              maxLength="12"
               disabled={isLoading}
             />
-            {errors.username && <small className="error-text">{errors.username}</small>}
+            {errors.accountNumber && <small className="error-text">{errors.accountNumber}</small>}
           </div>
           
           <div className="form-group">

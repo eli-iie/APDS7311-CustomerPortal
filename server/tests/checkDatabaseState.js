@@ -4,7 +4,9 @@
 const mongoose = require('mongoose');
 const Employee = require('../models/Employee');
 const User = require('../models/User');
-require('dotenv').config();
+const Payment = require('../models/Payment');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const checkDatabaseState = async () => {
   try {
@@ -19,8 +21,7 @@ const checkDatabaseState = async () => {
     console.log('👥 Checking employees...');
     const employeeCount = await Employee.countDocuments();
     console.log(`\n👥 Current Employees in Database: ${employeeCount}`);
-    
-    if (employeeCount > 0) {
+      if (employeeCount > 0) {
       console.log('\n📋 Existing Employees:');
       const employees = await Employee.find({}, 'username fullName role department').lean();
       employees.forEach(emp => {
@@ -41,14 +42,27 @@ const checkDatabaseState = async () => {
       });
     }
 
+    // Check payments
+    console.log('💳 Checking payments...');
+    const paymentCount = await Payment.countDocuments();
+    console.log(`\n💳 Current Payments in Database: ${paymentCount}`);
+      if (paymentCount > 0) {
+      console.log('\n📋 Existing Payments:');
+      const payments = await Payment.find({}, 'amount currency payeeName status').lean();
+      payments.forEach(payment => {
+        console.log(`  • ${payment.amount} ${payment.currency} to ${payment.payeeName} (${payment.status})`);
+      });
+    }
+
     // Summary
     console.log('\n' + '='.repeat(50));
     console.log(`📊 SUMMARY:`);
     console.log(`   Employees: ${employeeCount}`);
     console.log(`   Customers: ${customerCount}`);
-    console.log(`   Total Users: ${employeeCount + customerCount}`);
+    console.log(`   Payments: ${paymentCount}`);
+    console.log(`   Total Records: ${employeeCount + customerCount + paymentCount}`);
     
-    if (employeeCount === 0 && customerCount === 0) {
+    if (employeeCount === 0 && customerCount === 0 && paymentCount === 0) {
       console.log('\n💡 Database is empty - ready for seeding!');
     } else {
       console.log('\n⚠️  Database contains existing data');
