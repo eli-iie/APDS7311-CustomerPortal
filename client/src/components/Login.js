@@ -65,9 +65,7 @@ const Login = () => {
     if (error) {
       setError('');
     }
-  };
-
-  const validateForm = () => {
+  };  const validateForm = () => {
     // Account Number validation
     if (!formData.accountNumber.trim()) {
       setError('Account number is required');

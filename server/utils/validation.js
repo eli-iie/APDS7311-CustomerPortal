@@ -28,17 +28,31 @@ const validationChains = {
       .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
       .withMessage('Password must be at least 8 characters with uppercase, lowercase, number, and special character')
   ],
-  
-  login: [
+    login: [
     body('username')
+      .optional()
       .isLength({ min: 3, max: 20 })
       .matches(/^[a-zA-Z0-9_.]+$/)
       .withMessage('Invalid username format'),
     
+    body('accountNumber')
+      .optional()
+      .isLength({ min: 10, max: 12 })
+      .isNumeric()
+      .withMessage('Account number must be 10-12 digits'),
+    
     body('password')
       .isLength({ min: 1 })
       .withMessage('Password is required')
-  ],
+  ].concat([
+    // Custom validation to ensure either username or accountNumber is provided
+    body().custom((value, { req }) => {
+      if (!req.body.username && !req.body.accountNumber) {
+        throw new Error('Either username or account number is required');
+      }
+      return true;
+    })
+  ]),
   
   payment: [
     body('amount')
