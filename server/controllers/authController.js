@@ -65,24 +65,41 @@ const register = async (req, res) => {
 
 // Login Controller
 const login = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, accountNumber, password } = req.body;
 
   try {
-    // Input validation
-    const usernameRegex = /^[a-zA-Z0-9_.]{3,20}$/;
+    // Support both username and accountNumber login
+    const loginIdentifier = accountNumber || username;
     
-    if (!usernameRegex.test(username)) {
-      return res.status(400).json({ message: 'Invalid username format' });
+    if (!loginIdentifier) {
+      return res.status(400).json({ message: 'Account number or username is required' });
     }
 
-    // Sanitize username
-    const sanitizedUsername = username.toString().trim();
+    // Input validation
+    let user;
     
-    // Check if user exists and is active
-    const user = await User.findOne({ 
-      username: { $eq: sanitizedUsername }, 
-      isActive: { $eq: true } 
-    });
+    // If it's an account number (numeric), find by accountNumber
+    if (/^\d{10,12}$/.test(loginIdentifier)) {
+      const sanitizedAccountNumber = loginIdentifier.toString().trim();
+      user = await User.findOne({ 
+        accountNumber: { $eq: sanitizedAccountNumber }, 
+        isActive: { $eq: true } 
+      });
+    } else {
+      // Otherwise, treat as username
+      const usernameRegex = /^[a-zA-Z0-9_.]{3,20}$/;
+      
+      if (!usernameRegex.test(loginIdentifier)) {
+        return res.status(400).json({ message: 'Invalid username format' });
+      }
+
+      const sanitizedUsername = loginIdentifier.toString().trim();
+      user = await User.findOne({ 
+        username: { $eq: sanitizedUsername }, 
+        isActive: { $eq: true } 
+      });
+    }
+    
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }

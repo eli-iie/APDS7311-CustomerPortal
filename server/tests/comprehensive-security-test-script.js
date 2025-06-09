@@ -553,14 +553,13 @@ async function testHTTPSAndHeaders() {
  */
 async function testRateLimitingAndDoS() {
     colorLog('\n⚡ Testing Rate Limiting and DoS Protection...', 'cyan');
-      // Test 5.1: Rapid login attempts
+    
+    // Test 5.1: Rapid login attempts
     let loginAttempts = 0;
     let rateLimited = false;
-    let startTime = Date.now();
     
     for (let i = 0; i < 10; i++) {
         try {
-            const attemptStart = Date.now();
             await axios.post(`${CONFIG.serverUrl}/api/auth/login`, {
                 username: 'test_user',
                 password: 'wrong_password'
@@ -568,21 +567,9 @@ async function testRateLimitingAndDoS() {
                 timeout: 2000,
                 httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
             });
-            const attemptTime = Date.now() - attemptStart;
-            
-            // If request takes longer than 1 second, likely being rate limited
-            if (attemptTime > 1000) {
-                rateLimited = true;
-                break;
-            }
             loginAttempts++;
         } catch (error) {
             if (error.response?.status === 429) {
-                rateLimited = true;
-                break;
-            }
-            // If timeout or connection reset, likely rate limited
-            if (error.code === 'ECONNRESET' || error.code === 'TIMEOUT') {
                 rateLimited = true;
                 break;
             }
@@ -590,11 +577,7 @@ async function testRateLimitingAndDoS() {
         }
     }
     
-    let totalTime = Date.now() - startTime;
-    // If 10 attempts took more than 5 seconds, likely some rate limiting
-    let hasDelay = totalTime > 5000;
-    
-    recordTest('Rate limiting on failed login attempts', rateLimited || hasDelay || loginAttempts < 10);
+    recordTest('Rate limiting on failed login attempts', rateLimited || loginAttempts < 10);
     
     // Test 5.2: Large payload attack
     try {
